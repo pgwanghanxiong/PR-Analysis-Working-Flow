@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+.venv/
+output/
+calculation/2_1_Analysis Input Mod_PCTtest_DQ.csv
+calculation/3_1_Target Database format.csv

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Access | PR Review</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="access-gate" class="access-gate">
+      <div class="gate-usage" aria-label="Total usage count">
+        <span>Total uses</span>
+        <strong id="gate-use-count">66</strong>
+      </div>
+      <section class="access-panel" aria-labelledby="access-title">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <p class="eyebrow">QUESTIONNAIRE AUTOMATION</p>
+        <h1 id="access-title">Welcome to <span>PR review</span></h1>
+        <p class="access-intro">Enter your work details to continue. Your visit will be recorded.</p>
+        <form id="access-form" class="access-form">
+          <label class="field">
+            <span>Work email</span>
+            <input id="access-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="name@company.com" />
+          </label>
+          <label class="field">
+            <span>Business unit (BU)</span>
+            <input id="access-bu" name="business_unit" type="text" autocomplete="organization-title" required maxlength="80" placeholder="e.g. Consumer Care" />
+          </label>
+          <button id="access-submit" class="run-button" type="submit">
+            <span>Confirm and continue</span><span aria-hidden="true">&#8594;</span>
+          </button>
+          <p id="access-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+    <script src="/assets/login.js" defer></script>
+  </body>
+</html>

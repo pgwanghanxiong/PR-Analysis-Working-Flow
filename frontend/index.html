@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Analysis | PR Review</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE AUTOMATION</p>
+          <h1>Product experience <span>review</span></h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <form id="analysis-form" class="workflow-form">
+        <section class="workflow-section upload-section" aria-labelledby="upload-title">
+          <div class="workflow-heading">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <p class="eyebrow">RAW DATA</p>
+              <h2 id="upload-title">Upload questionnaire file</h2>
+            </div>
+          </div>
+          <label class="file-picker" for="csv-file">
+            <span class="file-icon" aria-hidden="true">+</span>
+            <span class="file-label"><strong id="file-name">Choose raw CSV</strong><small>Locked Day{number}_DQ schema</small></span>
+            <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required />
+          </label>
+          <p id="upload-status" class="status" role="status">Select a CSV that follows the raw input template.</p>
+        </section>
+
+        <section class="workflow-section analysis-section" aria-labelledby="analysis-title">
+          <div class="workflow-heading">
+            <span class="step-number" aria-hidden="true">02</span>
+            <div>
+              <p class="eyebrow">ANALYSIS SETUP</p>
+              <h2 id="analysis-title">Choose Study Name and analyze</h2>
+            </div>
+          </div>
+          <div class="study-fields">
+            <label class="field" for="existing-study">
+              <span>Existing Study Name</span>
+              <select id="existing-study">
+                <option value="">Loading studies...</option>
+              </select>
+            </label>
+            <button id="refresh-studies" class="refresh-button" type="button">Refresh studies</button>
+            <label class="field manual-study-field" for="study-name">
+              <span>Or enter a Study Name</span>
+              <input id="study-name" type="text" maxlength="200" placeholder="e.g. Haircare Q4 usage" />
+            </label>
+          </div>
+          <p id="studies-status" class="status" role="status">Loading Study Names from the database...</p>
+          <div class="analysis-actions">
+            <p id="status" class="status" role="status">Upload a template-compliant CSV to build the report.</p>
+            <button id="run-button" class="run-button" type="submit" disabled>
+              <span>Run analysis</span><span aria-hidden="true">&#8594;</span>
+            </button>
+          </div>
+        </section>
+      </form>
+
+      <section id="results" class="results" hidden>
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow">BUSINESS REPORT</p>
+            <h2>PR results</h2>
+          </div>
+          <div class="downloads" aria-label="Download files">
+            <a id="download-report" class="download-link" href="#" download>Excel report <span aria-hidden="true">&#8595;</span></a>
+            <a id="download-database" class="download-link secondary" href="#" download>Database CSV <span aria-hidden="true">&#8595;</span></a>
+            <a id="download-log" class="icon-link" href="#" title="Download validation log" aria-label="Download validation log">i</a>
+          </div>
+        </div>
+
+        <div id="database-status" class="database-status" role="status"></div>
+        <div class="table-scroll">
+          <table id="report-table" aria-label="PR report preview">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="report-caption" class="report-caption"></p>
+      </section>
+
+      <section class="standard-files" aria-labelledby="standard-files-title">
+        <div class="standard-heading">
+          <div>
+            <p class="eyebrow">STANDARD FILES</p>
+            <h2 id="standard-files-title">Download formats</h2>
+          </div>
+          <p>Blank, schema-aligned files for the analysis workflow.</p>
+        </div>
+        <div class="standard-grid">
+          <a class="standard-file" href="/api/templates/raw-input" download>
+            <span class="file-type" aria-hidden="true">CSV</span>
+            <span class="standard-copy"><strong>Raw analysis input</strong><small>Locked ID, product, and Day_DQ headers</small></span>
+            <span class="standard-arrow" aria-hidden="true">&#8595;</span>
+          </a>
+          <a class="standard-file" href="/api/templates/pr-report" download>
+            <span class="file-type workbook" aria-hidden="true">XLS</span>
+            <span class="standard-copy"><strong>PR report workbook</strong><small>Stakeholder report layout</small></span>
+            <span class="standard-arrow" aria-hidden="true">&#8595;</span>
+          </a>
+          <a class="standard-file" href="/api/templates/database" download>
+            <span class="file-type database" aria-hidden="true">CSV</span>
+            <span class="standard-copy"><strong>Database ingestion</strong><small>Six-column PostgreSQL target order</small></span>
+            <span class="standard-arrow" aria-hidden="true">&#8595;</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer"><span>PR output</span><span>3_2 format&nbsp;&nbsp;·&nbsp;&nbsp;Database export 3_1</span></footer>
+    </main>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>
