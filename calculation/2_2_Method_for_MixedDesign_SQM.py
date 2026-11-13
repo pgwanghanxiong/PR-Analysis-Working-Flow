@@ -11,9 +11,9 @@ import statsmodels.formula.api as smf
 from scipy import stats
 
 try:
-    from calculation.input_schema import read_raw_csv, validate_raw_dataframe
+    from calculation.input_schema import read_raw_csv, validate_analysis_dataframe
 except ModuleNotFoundError:
-    from input_schema import read_raw_csv, validate_raw_dataframe
+    from input_schema import read_raw_csv, validate_analysis_dataframe
 
 OUTPUT_FILE = Path("2_Result_SQM_Python.xlsx")
 
@@ -64,7 +64,7 @@ def _fit_mixed_model(df: pd.DataFrame, id_col: str) -> None:
 
 
 def run_significance_analysis(raw: pd.DataFrame) -> pd.DataFrame:
-    validate_raw_dataframe(raw)
+    validate_analysis_dataframe(raw)
     id_col = raw.columns[0]
     product_col = raw.columns[1]
     dq_cols = list(raw.columns[2:])

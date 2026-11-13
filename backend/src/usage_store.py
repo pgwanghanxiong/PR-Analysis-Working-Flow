@@ -41,6 +41,16 @@ def _connect(path: Path) -> sqlite3.Connection:
             business_unit TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS uploaded_studies (
+            study_name TEXT PRIMARY KEY,
+            upload_count INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS usage_migrations (
+            migration_name TEXT PRIMARY KEY,
+            completed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
         """
     )
     connection.execute(
@@ -111,3 +121,55 @@ def get_total_usage() -> int:
         return connection.execute(
             "SELECT counter_value FROM usage_counters WHERE counter_name = 'total'"
         ).fetchone()[0]
+
+
+def record_uploaded_study(study_name: str) -> None:
+    normalized_name = study_name.strip()
+    if not normalized_name:
+        return
+    with closing(_connect(USAGE_DB_PATH)) as connection:
+        with connection:
+            connection.execute(
+                """INSERT INTO uploaded_studies (study_name)
+                   VALUES (?)
+                   ON CONFLICT(study_name) DO UPDATE SET
+                       upload_count = uploaded_studies.upload_count + 1,
+                       last_uploaded_at = CURRENT_TIMESTAMP""",
+                (normalized_name,),
+            )
+
+
+def get_uploaded_study_names() -> list[str]:
+    with closing(_connect(USAGE_DB_PATH)) as connection:
+        rows = connection.execute(
+            "SELECT study_name FROM uploaded_studies ORDER BY study_name COLLATE NOCASE"
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
+def study_migration_applied(migration_name: str) -> bool:
+    with closing(_connect(USAGE_DB_PATH)) as connection:
+        row = connection.execute(
+            "SELECT 1 FROM usage_migrations WHERE migration_name = ?",
+            (migration_name,),
+        ).fetchone()
+    return row is not None
+
+
+def backfill_uploaded_studies(study_names: list[str], migration_name: str) -> None:
+    with closing(_connect(USAGE_DB_PATH)) as connection:
+        with connection:
+            already_applied = connection.execute(
+                "SELECT 1 FROM usage_migrations WHERE migration_name = ?",
+                (migration_name,),
+            ).fetchone()
+            if already_applied:
+                return
+            connection.executemany(
+                "INSERT OR IGNORE INTO uploaded_studies (study_name) VALUES (?)",
+                [(name.strip(),) for name in set(study_names) if name.strip()],
+            )
+            connection.execute(
+                "INSERT INTO usage_migrations (migration_name) VALUES (?)",
+                (migration_name,),
+            )

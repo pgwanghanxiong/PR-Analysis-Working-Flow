@@ -9,9 +9,9 @@ import pandas as pd
 from scipy import stats
 
 try:
-    from calculation.input_schema import read_raw_csv, validate_raw_dataframe
+    from calculation.input_schema import read_raw_csv, validate_analysis_dataframe
 except ModuleNotFoundError:
-    from input_schema import read_raw_csv, validate_raw_dataframe
+    from input_schema import read_raw_csv, validate_analysis_dataframe
 
 OUTPUT_FILE = Path("2_Result_SPBT_Python.xlsx")
 ALPHA = 0.05
@@ -56,7 +56,7 @@ def _adaptive_pvalue(group1: pd.Series, group2: pd.Series) -> float:
 
 
 def run_significance_analysis(raw_df: pd.DataFrame) -> pd.DataFrame:
-    validate_raw_dataframe(raw_df)
+    validate_analysis_dataframe(raw_df)
     id_col = raw_df.columns[0]
     product_col = raw_df.columns[1]
     dq_cols = list(raw_df.columns[2:])

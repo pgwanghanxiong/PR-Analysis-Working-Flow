@@ -6,7 +6,7 @@ import re
 import sys
 import uuid
 import csv
-from io import BytesIO, StringIO
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -22,22 +22,25 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from calculation.input_schema import (
-    ID_COLUMN,
-    PRODUCT_COLUMN,
     expected_columns,
-    validate_raw_dataframe,
 )
 from calculation.report_pipeline import (
     create_report_payload,
     load_analysis_dispatcher,
     load_database_columns,
     REPORT_TEMPLATE,
-    transform_database_data,
     write_business_report,
     write_database_export,
     write_validation_log,
 )
-from backend.src.database import IDENTIFIER_PATTERN, persist_if_schema_matches
+from backend.src.database import (
+    DatabaseSchemaMismatch,
+    DatabaseUnavailable,
+    fetch_study_names,
+    fetch_study_rows,
+    insert_uploaded_rows,
+)
+from backend.src.ingestion import long_rows_to_analysis_wide, normalize_uploaded_csv
 from backend.src.usage_store import (
     create_access_session,
     get_access_session,
@@ -66,17 +69,6 @@ def _require_access(authorization: str | None) -> dict[str, str]:
     if session is None:
         raise HTTPException(status_code=401, detail="Access session is invalid. Please confirm your details again.")
     return session
-
-
-def _read_uploaded_csv(content: bytes) -> pd.DataFrame:
-    try:
-        data = pd.read_csv(
-            BytesIO(content),
-            dtype={ID_COLUMN: "string", PRODUCT_COLUMN: "string"},
-        )
-        return validate_raw_dataframe(data)
-    except (UnicodeDecodeError, pd.errors.ParserError, ValueError) as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @app.get("/", include_in_schema=False)
@@ -124,54 +116,67 @@ def access_session(authorization: str | None = Header(default=None)) -> dict[str
 @app.get("/api/studies")
 def list_studies(authorization: str | None = Header(default=None)) -> dict[str, Any]:
     _require_access(authorization)
-    database_url = os.getenv("DATABASE_URL")
-    table_name = os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data")
-    if not database_url:
-        return {
-            "status": "unavailable",
-            "study_names": [],
-            "message": "Database is not configured. Enter a Study Name manually.",
-        }
-
-    parts = table_name.split(".")
-    if len(parts) != 2 or any(IDENTIFIER_PATTERN.fullmatch(part) is None for part in parts):
-        return {
-            "status": "unavailable",
-            "study_names": [],
-            "message": "DATABASE_TABLE must be a schema-qualified PostgreSQL identifier. Enter a Study Name manually.",
-        }
-
     try:
-        import psycopg
-        from psycopg import sql
-
-        schema, table = parts
-        study_column = sql.Identifier("1_Study")
-        query = sql.SQL(
-            "SELECT DISTINCT {column} FROM {schema}.{table} "
-            "WHERE {column} IS NOT NULL AND btrim({column}) <> '' ORDER BY {column}"
-        ).format(
-            column=study_column,
-            schema=sql.Identifier(schema),
-            table=sql.Identifier(table),
+        study_names = fetch_study_names(
+            os.getenv("DATABASE_URL"),
+            os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data"),
         )
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(query)
-                study_names = [str(row[0]).strip() for row in cursor.fetchall()]
         return {
             "status": "available",
             "study_names": study_names,
-            "message": f"Loaded {len(study_names)} Study Names from the database."
-            if study_names
-            else "No Study Names found in the database. Enter one manually.",
+            "message": f"Loaded {len(study_names)} existing Study Names.",
         }
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception:
-        return {
-            "status": "unavailable",
-            "study_names": [],
-            "message": "Could not load Study Names from the database. Enter a Study Name manually.",
-        }
+        raise HTTPException(status_code=503, detail="Could not load Study Names from PostgreSQL.")
+
+
+@app.post("/api/uploads")
+def upload_questionnaire_data(
+    file: UploadFile = File(...),
+    study_name: str | None = Form(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _require_access(authorization)
+    if not file.filename or Path(file.filename).suffix.lower() != ".csv":
+        raise HTTPException(status_code=415, detail="Upload a CSV file in Long or Wide format.")
+
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="CSV upload exceeds the 20 MB limit.")
+    try:
+        normalized, upload_format = normalize_uploaded_csv(content, study_name)
+    except (UnicodeDecodeError, pd.errors.ParserError, ValueError) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    try:
+        inserted_rows = insert_uploaded_rows(
+            normalized,
+            os.getenv("DATABASE_URL"),
+            os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data"),
+        )
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="PostgreSQL upload failed; no upload was confirmed.") from error
+
+    study_names = sorted(normalized["1_Study"].astype(str).str.strip().unique().tolist(), key=str.casefold)
+    return {
+        "status": "saved",
+        "format": upload_format,
+        "inserted_rows": inserted_rows,
+        "study_names": study_names,
+        "message": f"Saved {inserted_rows} {upload_format.title()} rows to PostgreSQL.",
+    }
 
 
 @app.get("/api/templates/{kind}")
@@ -199,25 +204,40 @@ def download_template(kind: str) -> Response:
 
 @app.post("/api/analyze")
 def analyze(
-    file: UploadFile = File(...),
     study_name: str = Form(...),
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
     _require_access(authorization)
-    if not file.filename or Path(file.filename).suffix.lower() != ".csv":
-        raise HTTPException(status_code=415, detail="Upload a CSV file that follows the locked input template.")
-    if not study_name.strip():
-        raise HTTPException(status_code=422, detail="Study name is required.")
+    normalized_study = study_name.strip()
+    if not normalized_study:
+        raise HTTPException(status_code=422, detail="Choose a Study Name from PostgreSQL.")
 
-    content = file.file.read(MAX_UPLOAD_BYTES + 1)
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="CSV upload exceeds the 20 MB limit.")
-    raw = _read_uploaded_csv(content)
+    try:
+        database_data = fetch_study_rows(
+            os.getenv("DATABASE_URL"),
+            os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data"),
+            normalized_study,
+        )
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="Could not read the selected Study Name from PostgreSQL.") from error
+
+    if database_data.empty:
+        raise HTTPException(status_code=404, detail=f"No PostgreSQL rows found for Study Name '{normalized_study}'.")
+    try:
+        raw = long_rows_to_analysis_wide(database_data)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
     dispatcher = load_analysis_dispatcher()
     experiment_type = dispatcher.detect_experiment_type(raw)
     significance = dispatcher.run_significance_by_type(raw, experiment_type)
     report = create_report_payload(raw, significance)
-    database_data = transform_database_data(raw, study_name)
 
     run_id = uuid.uuid4().hex
     run_dir = ARTIFACT_DIR / run_id
@@ -231,14 +251,14 @@ def analyze(
     write_database_export(database_data, database_path)
     preview_path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
 
-    database_result = persist_if_schema_matches(
-        database_data,
-        os.getenv("DATABASE_URL"),
-        os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data"),
-    )
+    database_result = {
+        "status": "loaded",
+        "message": f"Analysis read {len(database_data)} rows from PostgreSQL Study Name '{normalized_study}'.",
+    }
     log = {
         "run_id": run_id,
         "input_schema": "passed",
+        "study_name": normalized_study,
         "input_columns": list(raw.columns),
         "input_rows": int(len(raw)),
         "experiment_type": experiment_type.value,

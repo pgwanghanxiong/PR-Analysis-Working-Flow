@@ -28,12 +28,25 @@ def validate_raw_dataframe(data: pd.DataFrame) -> pd.DataFrame:
             f"Expected {expected}; received {actual}."
         )
 
+    return validate_analysis_dataframe(data)
+
+
+def validate_analysis_dataframe(data: pd.DataFrame) -> pd.DataFrame:
+    required_prefix = [ID_COLUMN, PRODUCT_COLUMN]
+    actual = list(data.columns)
+    if actual[:2] != required_prefix or len(actual) < 3:
+        raise ValueError(
+            "Analysis data must start with the respondent ID and product columns "
+            f"{required_prefix}, followed by at least one DQ metric."
+        )
+
+    metric_columns = actual[2:]
     invalid_day_columns = [
-        column for column in expected[2:] if DAY_COLUMN_PATTERN.fullmatch(column) is None
+        column for column in metric_columns if DAY_COLUMN_PATTERN.fullmatch(column) is None
     ]
     if invalid_day_columns:
         raise ValueError(
-            "DQ columns must use the Day{number}_{DQ_name} convention: "
+            "Analysis DQ columns must use the Day{number}_{DQ_name} convention: "
             f"{invalid_day_columns}"
         )
 
@@ -42,7 +55,7 @@ def validate_raw_dataframe(data: pd.DataFrame) -> pd.DataFrame:
         if values.isna().any() or values.astype(str).str.strip().eq("").any():
             raise ValueError(f"Raw input column '{column}' contains blank values.")
 
-    for column in expected[2:]:
+    for column in metric_columns:
         numeric = pd.to_numeric(data[column], errors="coerce")
         invalid_values = data[column].notna() & numeric.isna()
         if invalid_values.any():

@@ -15,6 +15,7 @@ from calculation.input_schema import (
     BASE_DIR,
     ID_COLUMN,
     PRODUCT_COLUMN,
+    validate_analysis_dataframe,
     validate_raw_dataframe,
 )
 
@@ -49,11 +50,14 @@ def load_analysis_dispatcher() -> ModuleType:
 
 
 def _abbreviations(products: list[str]) -> dict[str, str]:
-    if len(products) > 3:
-        raise ValueError(
-            f"The supplied PR template supports at most 3 products; received {len(products)}."
-        )
-    return {product: chr(ord("A") + index) for index, product in enumerate(products)}
+    def to_letters(number: int) -> str:
+        letters = ""
+        while number:
+            number, remainder = divmod(number - 1, 26)
+            letters = chr(ord("A") + remainder) + letters
+        return letters
+
+    return {product: to_letters(index) for index, product in enumerate(products, start=1)}
 
 
 def _format_mean(value: float) -> str:
@@ -66,7 +70,7 @@ def create_report_payload(
     raw: pd.DataFrame,
     significance: pd.DataFrame,
 ) -> dict[str, Any]:
-    validate_raw_dataframe(raw)
+    validate_analysis_dataframe(raw)
     products = sorted(raw[PRODUCT_COLUMN].astype(str).str.strip().unique().tolist())
     abbreviations = _abbreviations(products)
     sample_sizes = {
@@ -174,43 +178,45 @@ def transform_database_data(raw: pd.DataFrame, study_name: str) -> pd.DataFrame:
 def write_business_report(payload: dict[str, Any], output_path: Path) -> None:
     from openpyxl import load_workbook
     from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
 
     workbook = load_workbook(REPORT_TEMPLATE)
     worksheet = workbook["Rep(All Data)"]
+    product_count = len(payload["products"])
+    question_column = 1
+    time_column = 2
+    first_product_column = 3
+    last_product_column = first_product_column + product_count - 1
     for row in worksheet.iter_rows():
         for cell in row:
             cell.value = None
 
     for index, product in enumerate(payload["products"], start=1):
-        worksheet.cell(1, index, product["name"])
-        worksheet.cell(2, index, product["abbreviation"])
-        worksheet.cell(3, index, product["sample_size"])
+        column_index = first_product_column + index - 1
+        worksheet.cell(1, column_index, product["name"])
+        worksheet.cell(2, column_index, product["abbreviation"])
+        worksheet.cell(3, column_index, product["sample_size"])
 
-    worksheet.cell(3, 4, "Time Point")
-    worksheet.cell(3, 6, "DQ Question")
-    worksheet.cell(3, 7, "Chinese Description")
+    worksheet.cell(3, question_column, "DQ Question")
+    worksheet.cell(3, time_column, "Time Point")
     for row_index, report_row in enumerate(payload["rows"], start=4):
         for product_index, product_value in enumerate(report_row["product_values"], start=1):
-            worksheet.cell(row_index, product_index, product_value["display"])
-        worksheet.cell(row_index, 4, report_row["day"])
-        worksheet.cell(row_index, 6, report_row["question"])
-        worksheet.cell(row_index, 7, report_row["chinese_description"])
+            worksheet.cell(row_index, first_product_column + product_index - 1, product_value["display"])
+        worksheet.cell(row_index, question_column, report_row["question"])
+        worksheet.cell(row_index, time_column, report_row["day"])
 
     header_fill = PatternFill("solid", fgColor="DDEFEA")
     for row_index in range(1, 4):
-        for cell in worksheet[row_index]:
-            if cell.column <= 7:
-                cell.font = Font(bold=True, color="183B36")
-                cell.fill = header_fill
-                cell.alignment = Alignment(vertical="center")
+        for column_index in range(1, last_product_column + 1):
+            cell = worksheet.cell(row_index, column_index)
+            cell.font = Font(bold=True, color="183B36")
+            cell.fill = header_fill
+            cell.alignment = Alignment(vertical="center")
     worksheet.freeze_panes = "A4"
-    worksheet.column_dimensions["A"].width = 18
-    worksheet.column_dimensions["B"].width = 18
-    worksheet.column_dimensions["C"].width = 18
-    worksheet.column_dimensions["D"].width = 14
-    worksheet.column_dimensions["E"].width = 3
-    worksheet.column_dimensions["F"].width = 48
-    worksheet.column_dimensions["G"].width = 32
+    worksheet.column_dimensions[get_column_letter(question_column)].width = 48
+    worksheet.column_dimensions[get_column_letter(time_column)].width = 14
+    for column_index in range(1, product_count + 1):
+        worksheet.column_dimensions[get_column_letter(first_product_column + column_index - 1)].width = 18
     output_path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(output_path)
 

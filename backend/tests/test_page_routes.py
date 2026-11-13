@@ -22,7 +22,13 @@ def test_login_and_workspace_are_separate_urls() -> None:
     assert "/assets/login.js" in login.text
     assert 'id="analysis-form"' not in login.text
     assert workspace.status_code == 200
+    assert 'id="upload-form"' in workspace.text
     assert 'id="analysis-form"' in workspace.text
+    upload_form_start = workspace.text.index('id="upload-form"')
+    upload_form_end = workspace.text.index("</form>", upload_form_start)
+    analysis_form_start = workspace.text.index('id="analysis-form"')
+    assert upload_form_end < analysis_form_start
+    assert 'id="upload-button"' in workspace.text
     assert 'class="standard-files"' in workspace.text
     assert "/assets/app.js" in workspace.text
     assert 'id="access-form"' not in workspace.text
@@ -30,4 +36,6 @@ def test_login_and_workspace_are_separate_urls() -> None:
     analysis_section = workspace.text.index('class="workflow-section analysis-section"')
     assert upload_section < analysis_section
     assert 'id="existing-study"' in workspace.text
-    assert 'id="study-name"' in workspace.text
+    assert 'id="upload-study-name"' in workspace.text
+    assert workspace.text.index('id="upload-study-name"') < analysis_section
+    assert "Or enter a Study Name" not in workspace.text

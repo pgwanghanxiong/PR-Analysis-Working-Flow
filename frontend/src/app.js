@@ -1,12 +1,14 @@
 const ACCESS_TOKEN_KEY = "questionnaireAccessToken";
 const ACCESS_MESSAGE_KEY = "questionnaireAccessMessage";
 const appShell = document.querySelector("#app-shell");
-const form = document.querySelector("#analysis-form");
+const uploadForm = document.querySelector("#upload-form");
+const uploadButton = document.querySelector("#upload-button");
+const analysisForm = document.querySelector("#analysis-form");
 const fileInput = document.querySelector("#csv-file");
 const fileName = document.querySelector("#file-name");
 const uploadStatus = document.querySelector("#upload-status");
 const studySelect = document.querySelector("#existing-study");
-const manualStudy = document.querySelector("#study-name");
+const uploadStudyName = document.querySelector("#upload-study-name");
 const studiesStatus = document.querySelector("#studies-status");
 const refreshStudiesButton = document.querySelector("#refresh-studies");
 const runButton = document.querySelector("#run-button");
@@ -51,38 +53,67 @@ void restoreAccess();
 
 fileInput.addEventListener("change", () => {
   const selectedFile = fileInput.files[0];
-  fileName.textContent = selectedFile?.name || "Choose raw CSV";
-  uploadStatus.textContent = selectedFile ? `${selectedFile.name} selected.` : "Select a CSV that follows the raw input template.";
+  fileName.textContent = selectedFile?.name || "Choose CSV file";
   uploadStatus.classList.remove("error");
-  updateRunButton();
+  updateUploadStatus();
+  uploadButton.disabled = !selectedFile;
 });
 
 studySelect.addEventListener("change", () => {
-  if (studySelect.value) manualStudy.value = "";
   updateRunButton();
 });
 
-manualStudy.addEventListener("input", () => {
-  if (manualStudy.value.trim()) studySelect.value = "";
-  updateRunButton();
+uploadStudyName.addEventListener("input", () => {
+  updateUploadStatus();
 });
 
 refreshStudiesButton.addEventListener("click", () => {
   void loadStudies();
 });
 
-form.addEventListener("submit", async (event) => {
+uploadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const studyName = (studySelect.value || manualStudy.value).trim();
-  if (!fileInput.files.length || !studyName) return;
+  if (!fileInput.files.length) return;
+
+  uploadButton.disabled = true;
+  uploadStatus.classList.remove("error");
+  uploadStatus.textContent = "Validating format and saving rows to PostgreSQL...";
+
+  try {
+    const response = await fetch("/api/uploads", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: new FormData(uploadForm),
+    });
+    const body = await response.json();
+    if (response.status === 401) {
+      redirectToLogin(body.detail || "Confirm your email and business unit to continue.");
+      return;
+    }
+    if (!response.ok) throw new Error(body.detail || "The PostgreSQL upload failed.");
+    uploadStatus.textContent = body.message;
+    uploadStatus.classList.remove("error");
+    await loadStudies(body.study_names.length === 1 ? body.study_names[0] : "");
+  } catch (error) {
+    uploadStatus.textContent = error.message;
+    uploadStatus.classList.add("error");
+  } finally {
+    uploadButton.disabled = !fileInput.files.length;
+  }
+});
+
+analysisForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const studyName = studySelect.value.trim();
+  if (!studyName) return;
 
   runButton.disabled = true;
   statusMessage.classList.remove("error");
-  statusMessage.textContent = "Validating schema and calculating product comparisons...";
+  statusMessage.textContent = `Loading "${studyName}" from PostgreSQL and calculating product comparisons...`;
   results.hidden = true;
 
   try {
-    const formData = new FormData(form);
+    const formData = new FormData();
     formData.set("study_name", studyName);
     const response = await fetch("/api/analyze", {
       method: "POST",
@@ -106,11 +137,11 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-async function loadStudies() {
+async function loadStudies(preferredStudyName = "") {
   refreshStudiesButton.disabled = true;
   studiesStatus.classList.remove("error");
-  studiesStatus.textContent = "Loading Study Names from the database...";
-  studySelect.replaceChildren(option("Loading studies...", ""));
+  studiesStatus.textContent = "Loading existing Study Names...";
+  studySelect.replaceChildren(option("Loading Study Names...", ""));
   studySelect.disabled = true;
 
   try {
@@ -124,14 +155,17 @@ async function loadStudies() {
     }
     if (!response.ok) throw new Error(payload.detail || "Could not load Study Names.");
 
-    studySelect.replaceChildren(option("Select an existing Study Name", ""));
+    studySelect.replaceChildren(option("Select an uploaded Study Name", ""));
     for (const studyName of payload.study_names) {
       studySelect.append(option(studyName, studyName));
     }
     studySelect.disabled = payload.study_names.length === 0;
+    if (preferredStudyName && payload.study_names.includes(preferredStudyName)) {
+      studySelect.value = preferredStudyName;
+    }
     studiesStatus.textContent = payload.message;
   } catch (error) {
-    studySelect.replaceChildren(option("Database Study Names unavailable", ""));
+    studySelect.replaceChildren(option("Existing Study Names unavailable", ""));
     studySelect.disabled = true;
     studiesStatus.textContent = error.message;
     studiesStatus.classList.add("error");
@@ -149,44 +183,63 @@ function option(label, value) {
 }
 
 function updateRunButton() {
-  runButton.disabled = !fileInput.files.length || !(studySelect.value.trim() || manualStudy.value.trim());
+  runButton.disabled = !studySelect.value.trim();
+}
+
+function updateUploadStatus() {
+  const selectedFile = fileInput.files[0];
+  if (selectedFile && uploadStudyName.value.trim()) {
+    uploadStatus.textContent = `${selectedFile.name} selected. Wide format will be saved as "${uploadStudyName.value.trim()}".`;
+  } else if (selectedFile) {
+    uploadStatus.textContent = `${selectedFile.name} selected. Enter a Study Name if this is Wide format.`;
+  } else {
+    uploadStatus.textContent = "Select a CSV and provide its Study Name.";
+  }
 }
 
 function renderReport(report, validation, artifacts) {
   const table = document.querySelector("#report-table");
+  const columnGroup = table.querySelector("colgroup");
   const head = table.querySelector("thead");
   const body = table.querySelector("tbody");
+  const productCount = report.products.length;
+  columnGroup.replaceChildren();
   head.replaceChildren();
   body.replaceChildren();
 
-  const firstRow = document.createElement("tr");
-  for (let index = 0; index < 3; index += 1) {
-    firstRow.append(cell("th", report.products[index]?.name || "", "product-head"));
+  columnGroup.append(column("question-column"), column("time-column"));
+  for (let index = 0; index < productCount; index += 1) {
+    columnGroup.append(column("product-column"));
   }
-  firstRow.append(cell("th", ""), cell("th", ""), cell("th", ""), cell("th", ""));
+  table.style.minWidth = `${300 + 95 + productCount * 125}px`;
+
+  const firstRow = document.createElement("tr");
+  firstRow.append(cell("th", ""), cell("th", ""));
+  for (const product of report.products) {
+    firstRow.append(cell("th", product.name, "product-head"));
+  }
   head.append(firstRow);
 
   const secondRow = document.createElement("tr");
-  for (let index = 0; index < 3; index += 1) {
-    secondRow.append(cell("th", report.products[index]?.abbreviation || ""));
+  secondRow.append(cell("th", ""), cell("th", ""));
+  for (const product of report.products) {
+    secondRow.append(cell("th", product.abbreviation));
   }
-  secondRow.append(cell("th", ""), cell("th", ""), cell("th", ""), cell("th", ""));
   head.append(secondRow);
 
   const labelsRow = document.createElement("tr");
-  for (let index = 0; index < 3; index += 1) {
-    const product = report.products[index];
-    labelsRow.append(cell("th", product ? `N = ${product.sample_size}` : ""));
+  labelsRow.append(cell("th", "DQ Question"), cell("th", "Time Point"));
+  for (const product of report.products) {
+    labelsRow.append(cell("th", `N = ${product.sample_size}`));
   }
-  labelsRow.append(cell("th", "Time Point"), cell("th", ""), cell("th", "DQ Question"), cell("th", "Chinese Description"));
   head.append(labelsRow);
 
   for (const row of report.rows) {
     const tableRow = document.createElement("tr");
-    for (let index = 0; index < 3; index += 1) {
-      tableRow.append(cell("td", row.product_values[index]?.display || ""));
+    tableRow.append(cell("td", row.question, "question-value"), cell("td", row.day, "time-value"));
+    for (const productValue of row.product_values) {
+      tableRow.append(cell("td", productValue.display || "", "product-value"));
     }
-    tableRow.append(cell("td", row.day), cell("td", ""), cell("td", row.question), cell("td", row.chinese_description || ""));
     body.append(tableRow);
   }
 
@@ -196,6 +249,12 @@ function renderReport(report, validation, artifacts) {
   document.querySelector("#download-database").href = artifacts.database_ingestion;
   document.querySelector("#download-log").href = artifacts.validation_log;
   document.querySelector("#report-caption").textContent = `${report.rows.length} question/time rows · significance threshold p < 0.05 · markers list products with a significant pairwise difference`;
+}
+
+function column(className) {
+  const element = document.createElement("col");
+  element.className = className;
+  return element;
 }
 
 function cell(tag, text, className = "") {

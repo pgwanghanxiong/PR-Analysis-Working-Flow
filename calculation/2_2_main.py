@@ -9,9 +9,9 @@ from types import ModuleType
 import pandas as pd
 
 try:
-    from calculation.input_schema import read_raw_csv, validate_raw_dataframe
+    from calculation.input_schema import read_raw_csv, validate_analysis_dataframe
 except ModuleNotFoundError:
-    from input_schema import read_raw_csv, validate_raw_dataframe
+    from input_schema import read_raw_csv, validate_analysis_dataframe
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -34,7 +34,7 @@ ALGORITHM_FILE_BY_TYPE = {
 
 def detect_experiment_type(data: pd.DataFrame) -> ExperimentType:
     """Determine experiment type by counting unique products per subject ID."""
-    validate_raw_dataframe(data)
+    validate_analysis_dataframe(data)
     if data.shape[1] < 3:
         raise ValueError("Input data must have at least 3 columns: ID, product, DQ...")
 
@@ -60,7 +60,7 @@ def detect_experiment_type(data: pd.DataFrame) -> ExperimentType:
 
 def create_description_statistics(data: pd.DataFrame) -> pd.DataFrame:
     """Create unified description statistics output: question x product mean."""
-    validate_raw_dataframe(data)
+    validate_analysis_dataframe(data)
     id_col = data.columns[0]
     product_col = data.columns[1]
     dq_cols = list(data.columns[2:])
@@ -101,7 +101,7 @@ def _load_algorithm_module(module_path: Path) -> ModuleType:
 
 def run_significance_by_type(data: pd.DataFrame, exp_type: ExperimentType) -> pd.DataFrame:
     """Dispatch to the matched algorithm module with a unified function contract."""
-    validate_raw_dataframe(data)
+    validate_analysis_dataframe(data)
     module_path = ALGORITHM_FILE_BY_TYPE[exp_type]
     module = _load_algorithm_module(module_path)
 

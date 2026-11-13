@@ -20,7 +20,7 @@
         </div>
       </header>
 
-      <form id="analysis-form" class="workflow-form">
+      <form id="upload-form" class="workflow-form">
         <section class="workflow-section upload-section" aria-labelledby="upload-title">
           <div class="workflow-heading">
             <span class="step-number" aria-hidden="true">01</span>
@@ -29,15 +29,28 @@
               <h2 id="upload-title">Upload questionnaire file</h2>
             </div>
           </div>
-          <label class="file-picker" for="csv-file">
-            <span class="file-icon" aria-hidden="true">+</span>
-            <span class="file-label"><strong id="file-name">Choose raw CSV</strong><small>Locked Day{number}_DQ schema</small></span>
-            <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required />
-          </label>
-          <p id="upload-status" class="status" role="status">Select a CSV that follows the raw input template.</p>
+          <div class="upload-fields">
+            <label class="file-picker" for="csv-file">
+              <span class="file-icon" aria-hidden="true">+</span>
+              <span class="file-label"><strong id="file-name">Choose CSV file</strong><small>Long database format or Wide DQ format</small></span>
+              <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required />
+            </label>
+            <label class="field" for="upload-study-name">
+              <span>Study Name (required for Wide format)</span>
+              <input id="upload-study-name" name="study_name" type="text" maxlength="200" placeholder="e.g. Haircare Q4 usage" />
+            </label>
+          </div>
+          <div class="upload-actions">
+            <p id="upload-status" class="status" role="status">Upload Long database rows or Wide DQ input. Wide format requires a Study Name.</p>
+            <button id="upload-button" class="run-button" type="submit" disabled>
+              <span>Upload to PostgreSQL</span><span aria-hidden="true">&#8593;</span>
+            </button>
+          </div>
         </section>
+      </form>
 
-        <section class="workflow-section analysis-section" aria-labelledby="analysis-title">
+      <section class="workflow-section analysis-section" aria-labelledby="analysis-title">
+        <form id="analysis-form">
           <div class="workflow-heading">
             <span class="step-number" aria-hidden="true">02</span>
             <div>
@@ -47,26 +60,22 @@
           </div>
           <div class="study-fields">
             <label class="field" for="existing-study">
-              <span>Existing Study Name</span>
+              <span>Study Name from PostgreSQL</span>
               <select id="existing-study">
-                <option value="">Loading studies...</option>
+                <option value="">Loading Study Names...</option>
               </select>
             </label>
             <button id="refresh-studies" class="refresh-button" type="button">Refresh studies</button>
-            <label class="field manual-study-field" for="study-name">
-              <span>Or enter a Study Name</span>
-              <input id="study-name" type="text" maxlength="200" placeholder="e.g. Haircare Q4 usage" />
-            </label>
           </div>
-          <p id="studies-status" class="status" role="status">Loading Study Names from the database...</p>
+          <p id="studies-status" class="status" role="status">Loading existing Study Names...</p>
           <div class="analysis-actions">
-            <p id="status" class="status" role="status">Upload a template-compliant CSV to build the report.</p>
+            <p id="status" class="status" role="status">Choose an uploaded Study Name to analyze.</p>
             <button id="run-button" class="run-button" type="submit" disabled>
               <span>Run analysis</span><span aria-hidden="true">&#8594;</span>
             </button>
           </div>
-        </section>
-      </form>
+        </form>
+      </section>
 
       <section id="results" class="results" hidden>
         <div class="results-heading">
@@ -84,6 +93,7 @@
         <div id="database-status" class="database-status" role="status"></div>
         <div class="table-scroll">
           <table id="report-table" aria-label="PR report preview">
+            <colgroup></colgroup>
             <thead></thead>
             <tbody></tbody>
           </table>
