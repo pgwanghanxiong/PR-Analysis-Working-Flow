@@ -1,14 +1,8 @@
 const ACCESS_TOKEN_KEY = "questionnaireAccessToken";
 const ACCESS_MESSAGE_KEY = "questionnaireAccessMessage";
 const appShell = document.querySelector("#app-shell");
-const uploadForm = document.querySelector("#upload-form");
-const uploadButton = document.querySelector("#upload-button");
 const analysisForm = document.querySelector("#analysis-form");
-const fileInput = document.querySelector("#csv-file");
-const fileName = document.querySelector("#file-name");
-const uploadStatus = document.querySelector("#upload-status");
 const studySelect = document.querySelector("#existing-study");
-const uploadStudyName = document.querySelector("#upload-study-name");
 const studiesStatus = document.querySelector("#studies-status");
 const refreshStudiesButton = document.querySelector("#refresh-studies");
 const runButton = document.querySelector("#run-button");
@@ -51,56 +45,11 @@ function redirectToLogin(message = "") {
 
 void restoreAccess();
 
-fileInput.addEventListener("change", () => {
-  const selectedFile = fileInput.files[0];
-  fileName.textContent = selectedFile?.name || "Choose CSV file";
-  uploadStatus.classList.remove("error");
-  updateUploadStatus();
-  uploadButton.disabled = !selectedFile;
-});
-
-studySelect.addEventListener("change", () => {
-  updateRunButton();
-});
-
-uploadStudyName.addEventListener("input", () => {
-  updateUploadStatus();
-});
-
 refreshStudiesButton.addEventListener("click", () => {
   void loadStudies();
 });
 
-uploadForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!fileInput.files.length) return;
-
-  uploadButton.disabled = true;
-  uploadStatus.classList.remove("error");
-  uploadStatus.textContent = "Validating format and saving rows to PostgreSQL...";
-
-  try {
-    const response = await fetch("/api/uploads", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: new FormData(uploadForm),
-    });
-    const body = await response.json();
-    if (response.status === 401) {
-      redirectToLogin(body.detail || "Confirm your email and business unit to continue.");
-      return;
-    }
-    if (!response.ok) throw new Error(body.detail || "The PostgreSQL upload failed.");
-    uploadStatus.textContent = body.message;
-    uploadStatus.classList.remove("error");
-    await loadStudies(body.study_names.length === 1 ? body.study_names[0] : "");
-  } catch (error) {
-    uploadStatus.textContent = error.message;
-    uploadStatus.classList.add("error");
-  } finally {
-    uploadButton.disabled = !fileInput.files.length;
-  }
-});
+studySelect.addEventListener("change", updateRunButton);
 
 analysisForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -175,26 +124,15 @@ async function loadStudies(preferredStudyName = "") {
   }
 }
 
+function updateRunButton() {
+  runButton.disabled = !studySelect.value.trim();
+}
+
 function option(label, value) {
   const element = document.createElement("option");
   element.textContent = label;
   element.value = value;
   return element;
-}
-
-function updateRunButton() {
-  runButton.disabled = !studySelect.value.trim();
-}
-
-function updateUploadStatus() {
-  const selectedFile = fileInput.files[0];
-  if (selectedFile && uploadStudyName.value.trim()) {
-    uploadStatus.textContent = `${selectedFile.name} selected. Wide format will be saved as "${uploadStudyName.value.trim()}".`;
-  } else if (selectedFile) {
-    uploadStatus.textContent = `${selectedFile.name} selected. Enter a Study Name if this is Wide format.`;
-  } else {
-    uploadStatus.textContent = "Select a CSV and provide its Study Name.";
-  }
 }
 
 function renderReport(report, validation, artifacts) {
@@ -213,26 +151,26 @@ function renderReport(report, validation, artifacts) {
   }
   table.style.minWidth = `${300 + 95 + productCount * 125}px`;
 
-  const firstRow = document.createElement("tr");
-  firstRow.append(cell("th", ""), cell("th", ""));
+  const productHeader = document.createElement("tr");
+  productHeader.append(cell("th", ""), cell("th", ""));
   for (const product of report.products) {
-    firstRow.append(cell("th", product.name, "product-head"));
+    productHeader.append(cell("th", product.name, "product-head"));
   }
-  head.append(firstRow);
+  head.append(productHeader);
 
-  const secondRow = document.createElement("tr");
-  secondRow.append(cell("th", ""), cell("th", ""));
+  const abbreviationHeader = document.createElement("tr");
+  abbreviationHeader.append(cell("th", ""), cell("th", ""));
   for (const product of report.products) {
-    secondRow.append(cell("th", product.abbreviation));
+    abbreviationHeader.append(cell("th", product.abbreviation));
   }
-  head.append(secondRow);
+  head.append(abbreviationHeader);
 
-  const labelsRow = document.createElement("tr");
-  labelsRow.append(cell("th", "DQ Question"), cell("th", "Time Point"));
+  const sampleHeader = document.createElement("tr");
+  sampleHeader.append(cell("th", "DQ Question"), cell("th", "Time Point"));
   for (const product of report.products) {
-    labelsRow.append(cell("th", `N = ${product.sample_size}`));
+    sampleHeader.append(cell("th", `N = ${product.sample_size}`));
   }
-  head.append(labelsRow);
+  head.append(sampleHeader);
 
   for (const row of report.rows) {
     const tableRow = document.createElement("tr");

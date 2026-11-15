@@ -1,9 +1,10 @@
 import pandas as pd
 import pytest
 
-from backend.src.ingestion import LONG_COLUMNS, long_rows_to_analysis_wide, normalize_uploaded_csv
+from backend.src.ingestion import LONG_COLUMNS, normalize_uploaded_csv
 from calculation.input_schema import expected_columns
 from calculation.report_pipeline import create_report_payload, load_analysis_dispatcher
+from calculation.study_data import long_rows_to_analysis_wide
 
 
 def csv_bytes(data: pd.DataFrame) -> bytes:

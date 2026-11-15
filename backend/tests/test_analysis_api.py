@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 
 import httpx
 import pandas as pd
@@ -38,6 +39,7 @@ def wide_sample() -> pd.DataFrame:
 def test_wide_upload_is_transformed_and_persisted(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(usage_store, "USAGE_DB_PATH", tmp_path / "usage.sqlite3")
     monkeypatch.setenv("DATABASE_URL", "postgresql://test")
+    monkeypatch.setitem(sys.modules, "calculation.report_pipeline", None)
     captured: dict[str, object] = {}
 
     def fake_insert(data, _database_url, _table_name):
@@ -144,6 +146,7 @@ def test_analyze_loads_selected_study_from_database(tmp_path, monkeypatch) -> No
     monkeypatch.setattr(app_module, "ARTIFACT_DIR", tmp_path / "artifacts")
     long_data = transform_database_data(wide_sample(), "Study A")
     monkeypatch.setattr(app_module, "fetch_study_rows", lambda *_args: long_data)
+    monkeypatch.setitem(sys.modules, "backend.src.ingestion", None)
 
     async def analyze() -> httpx.Response:
         transport = httpx.ASGITransport(app=app_module.app)

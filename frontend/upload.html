@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Data Upload</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE</p>
+          <h1>Questionnaire Data Upload</h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <a class="page-back" href="/questionnaire">&#8592; Questionnaire</a>
+
+      <form id="upload-form" class="workflow-form">
+        <section class="workflow-section upload-section" aria-labelledby="upload-title">
+          <div class="workflow-heading">
+            <span class="step-number" aria-hidden="true">01</span>
+            <div>
+              <p class="eyebrow">RAW DATA</p>
+              <h2 id="upload-title">Upload questionnaire file</h2>
+            </div>
+          </div>
+          <div class="upload-fields">
+            <label class="file-picker" for="csv-file">
+              <span class="file-icon" aria-hidden="true">+</span>
+              <span class="file-label"><strong id="file-name">Choose CSV file</strong><small>Long database format or Wide DQ format</small></span>
+              <input id="csv-file" name="file" type="file" accept=".csv,text/csv" required />
+            </label>
+            <label class="field" for="upload-study-name">
+              <span>Study Name (required for Wide format)</span>
+              <input id="upload-study-name" name="study_name" type="text" maxlength="200" placeholder="e.g. Haircare Q4 usage" />
+            </label>
+          </div>
+          <div class="upload-actions">
+            <p id="upload-status" class="status" role="status">Upload Long database rows or Wide DQ input. Wide format requires a Study Name.</p>
+            <button id="upload-button" class="run-button" type="submit" disabled>
+              <span>Upload to PostgreSQL</span><span aria-hidden="true">&#8593;</span>
+            </button>
+          </div>
+        </section>
+      </form>
+
+      <section class="standard-files" aria-labelledby="standard-files-title">
+        <div class="standard-heading">
+          <div>
+            <p class="eyebrow">STANDARD FILES</p>
+            <h2 id="standard-files-title">Download formats</h2>
+          </div>
+          <p>Blank, schema-aligned files for the analysis workflow.</p>
+        </div>
+        <div class="standard-grid">
+          <a class="standard-file" href="/api/templates/raw-input" download>
+            <span class="file-type" aria-hidden="true">CSV</span>
+            <span class="standard-copy"><strong>Raw analysis input</strong><small>Locked ID, product, and Day_DQ headers</small></span>
+            <span class="standard-arrow" aria-hidden="true">&#8595;</span>
+          </a>
+          <a class="standard-file" href="/api/templates/database" download>
+            <span class="file-type database" aria-hidden="true">CSV</span>
+            <span class="standard-copy"><strong>Database ingestion</strong><small>Six-column PostgreSQL target order</small></span>
+            <span class="standard-arrow" aria-hidden="true">&#8595;</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer"><span>Questionnaire</span><span>Data Upload</span></footer>
+    </main>
+    <script src="/assets/page-session.js" defer></script>
+    <script src="/assets/upload.js" defer></script>
+  </body>
+</html>

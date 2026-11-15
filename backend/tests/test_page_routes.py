@@ -6,36 +6,50 @@ from backend.src.main import app
 
 
 def test_login_and_workspace_are_separate_urls() -> None:
-    async def get_pages() -> tuple[httpx.Response, httpx.Response, httpx.Response]:
+    async def get_pages() -> tuple[
+        httpx.Response,
+        httpx.Response,
+        httpx.Response,
+        httpx.Response,
+        httpx.Response,
+        httpx.Response,
+    ]:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
             root = await client.get("/", follow_redirects=False)
             login = await client.get("/login")
-            workspace = await client.get("/workspace")
-            return root, login, workspace
+            menu = await client.get("/questionnaire")
+            upload = await client.get("/questionnaire-data-upload")
+            analysis = await client.get("/questionnaire-data-analysis")
+            workspace_alias = await client.get("/workspace", follow_redirects=False)
+            return root, login, menu, upload, analysis, workspace_alias
 
-    root, login, workspace = asyncio.run(get_pages())
+    root, login, menu, upload, analysis, workspace_alias = asyncio.run(get_pages())
     assert root.status_code == 302
     assert root.headers["location"] == "/login"
     assert login.status_code == 200
     assert 'id="access-form"' in login.text
     assert "/assets/login.js" in login.text
     assert 'id="analysis-form"' not in login.text
-    assert workspace.status_code == 200
-    assert 'id="upload-form"' in workspace.text
-    assert 'id="analysis-form"' in workspace.text
-    upload_form_start = workspace.text.index('id="upload-form"')
-    upload_form_end = workspace.text.index("</form>", upload_form_start)
-    analysis_form_start = workspace.text.index('id="analysis-form"')
-    assert upload_form_end < analysis_form_start
-    assert 'id="upload-button"' in workspace.text
-    assert 'class="standard-files"' in workspace.text
-    assert "/assets/app.js" in workspace.text
-    assert 'id="access-form"' not in workspace.text
-    upload_section = workspace.text.index('class="workflow-section upload-section"')
-    analysis_section = workspace.text.index('class="workflow-section analysis-section"')
-    assert upload_section < analysis_section
-    assert 'id="existing-study"' in workspace.text
-    assert 'id="upload-study-name"' in workspace.text
-    assert workspace.text.index('id="upload-study-name"') < analysis_section
-    assert "Or enter a Study Name" not in workspace.text
+
+    assert menu.status_code == 200
+    assert "Questionnaire</h1>" in menu.text
+    assert 'href="/questionnaire-data-upload"' in menu.text
+    assert 'href="/questionnaire-data-analysis"' in menu.text
+
+    assert upload.status_code == 200
+    assert 'id="upload-form"' in upload.text
+    assert 'id="upload-button"' in upload.text
+    assert 'class="standard-files"' in upload.text
+    assert 'id="analysis-form"' not in upload.text
+    assert "/assets/upload.js" in upload.text
+
+    assert analysis.status_code == 200
+    assert 'id="analysis-form"' in analysis.text
+    assert 'id="results"' in analysis.text
+    assert 'id="upload-form"' not in analysis.text
+    assert 'class="standard-files"' not in analysis.text
+    assert "/assets/app.js" in analysis.text
+
+    assert workspace_alias.status_code == 302
+    assert workspace_alias.headers["location"] == "/questionnaire-data-analysis"

@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 
-from calculation.report_pipeline import load_database_columns
+from calculation.database_format import load_database_columns
 
 
 IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")

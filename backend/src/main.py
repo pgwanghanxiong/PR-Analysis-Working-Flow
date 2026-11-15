@@ -24,15 +24,7 @@ if str(ROOT) not in sys.path:
 from calculation.input_schema import (
     expected_columns,
 )
-from calculation.report_pipeline import (
-    create_report_payload,
-    load_analysis_dispatcher,
-    load_database_columns,
-    REPORT_TEMPLATE,
-    write_business_report,
-    write_database_export,
-    write_validation_log,
-)
+from calculation.database_format import load_database_columns
 from backend.src.database import (
     DatabaseSchemaMismatch,
     DatabaseUnavailable,
@@ -40,7 +32,6 @@ from backend.src.database import (
     fetch_study_rows,
     insert_uploaded_rows,
 )
-from backend.src.ingestion import long_rows_to_analysis_wide, normalize_uploaded_csv
 from backend.src.usage_store import (
     create_access_session,
     get_access_session,
@@ -82,7 +73,22 @@ def login_page() -> FileResponse:
 
 
 @app.get("/workspace")
-def workspace_page() -> FileResponse:
+def workspace_page() -> RedirectResponse:
+    return RedirectResponse("/questionnaire-data-analysis", status_code=302)
+
+
+@app.get("/questionnaire")
+def questionnaire_menu_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "questionnaire.html")
+
+
+@app.get("/questionnaire-data-upload")
+def questionnaire_upload_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "upload.html")
+
+
+@app.get("/questionnaire-data-analysis")
+def questionnaire_analysis_page() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
 
 
@@ -142,6 +148,8 @@ def upload_questionnaire_data(
     study_name: str | None = Form(default=None),
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
+    from backend.src.ingestion import normalize_uploaded_csv
+
     _require_access(authorization)
     if not file.filename or Path(file.filename).suffix.lower() != ".csv":
         raise HTTPException(status_code=415, detail="Upload a CSV file in Long or Wide format.")
@@ -182,7 +190,7 @@ def upload_questionnaire_data(
 @app.get("/api/templates/{kind}")
 def download_template(kind: str) -> Response:
     if kind == "pr-report":
-        return FileResponse(REPORT_TEMPLATE, filename="3_2_Target_Result_Format.xlsx")
+        return FileResponse(ROOT / "calculation" / "3_2_Target Result Format.xlsx", filename="3_2_Target_Result_Format.xlsx")
 
     templates = {
         "raw-input": (expected_columns(), "2_1_Analysis_Input_Template.csv"),
@@ -208,6 +216,15 @@ def analyze(
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
     _require_access(authorization)
+    from calculation.report_pipeline import (
+        create_report_payload,
+        load_analysis_dispatcher,
+        write_business_report,
+        write_database_export,
+        write_validation_log,
+    )
+    from calculation.study_data import long_rows_to_analysis_wide
+
     normalized_study = study_name.strip()
     if not normalized_study:
         raise HTTPException(status_code=422, detail="Choose a Study Name from PostgreSQL.")

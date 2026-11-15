@@ -42,7 +42,7 @@ accessForm.addEventListener("submit", async (event) => {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.detail || "Unable to confirm access.");
     sessionStorage.setItem(ACCESS_TOKEN_KEY, payload.session_token);
-    window.location.assign("/workspace");
+    window.location.assign("/questionnaire");
   } catch (error) {
     accessStatus.textContent = error.message;
     accessStatus.classList.add("error");

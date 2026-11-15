@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire | Menu</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE AUTOMATION</p>
+          <h1>Questionnaire</h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <nav class="questionnaire-menu" aria-label="Questionnaire modules">
+        <p class="eyebrow">MODULES</p>
+        <ul>
+          <li><a href="/questionnaire-data-upload">Questionnaire Data Upload <span aria-hidden="true">&#8594;</span></a></li>
+          <li><a href="/questionnaire-data-analysis">Questionnaire Data Analysis <span aria-hidden="true">&#8594;</span></a></li>
+        </ul>
+      </nav>
+
+      <footer class="footer"><span>Questionnaire</span><span>Menu</span></footer>
+    </main>
+    <script src="/assets/page-session.js" defer></script>
+    <script src="/assets/hub.js" defer></script>
+  </body>
+</html>
