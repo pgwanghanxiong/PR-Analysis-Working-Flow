@@ -1,0 +1,496 @@
+﻿ID,BU,Category,Variable Code,English Question,Chinese Question,Options
+1,PCC,[Screen],WTP,Willing to participate,您愿意参加本次调研吗？（单选）,"愿意 / Yes
+不愿意 / No"
+2,PCC,[Screen],Gndr,Gender,请问您的性别是？（单选）,"男性 / Male
+女性 / Female"
+3,PCC,[Screen],Age,Age,请问您的实际年龄即周岁是多少呢？（单选）,"18岁以下
+18-29岁
+30-34岁
+34岁以上"
+4,PCC,[Screen],City,City,请问您所在的城市是？（单选）,"北京 / Beijing
+上海 / Shanghai
+广州 / Guangzhou
+其他"
+5,PCC,[Screen],ResidLen,Length of residence,请问您在本市居住的时间是？（单选）,"因旅游、公干而临时居住在这里
+不到1年
+1-2年
+2年或2年以上"
+6,PCC,[Screen],OccScr,Occupation screening,请问您本人或家人/亲朋好友是否在以下地方工作？（复选）,"个人清洁用品生产厂家/批发公司/零售店(柜台)
+个人清洁用品商店或商超/百货的相关柜台
+个人清洁用品科研或质检单位
+广告公司/市场研究机构
+电台/电视台/报纸/其他新闻媒介机构
+军队/公安部门
+以上都没有"
+7,PCC,[Screen],ResP3M,Research participation in P3M,过去三个月里，您有没有参加过有关家庭日用品的访问或研究？（单选）,"有
+没有"
+8,PCC,[Screen],HHSize,Household size,目前您家里一共住多少人？（单选）,"1人
+2人
+3人
+4人
+5人
+6人
+7人
+8人
+9人及以上"
+9,PCC,[Screen],HHInc,Household income,哪一类最能代表您家庭每月税后总收入？（单选）,"2500元以下
+2500-2999元
+3000-3499元
+3500-3999元
+4000-4499元
+4500-4999元
+5000-5499元
+5500-5999元
+6000-6499元
+6500-6999元
+7000-7499元
+7500-7999元
+8000-8999元
+9000-9999元
+10000-10999元
+11000-11999元
+12000-12999元
+13000-13999元
+14000-14999元
+15000-15999元
+16000-17999元
+18000-19999元
+20000-21999元
+22000-23999元
+24000-25999元
+26000-27999元
+28000-29999元
+30000-39999元
+40000-49999元
+50000-59999元
+60000-69999元
+70000-79999元
+80000-89999元
+90000-99999元
+100000元及以上
+拒答/不知道"
+10,PCC,[Screen],PCInc,Per capita monthly income,根据S7b/S7a计算的人均月收入分层,"Middle Class +
+New Middle Class
+Low Income"
+11,PCC,[Screen],MarStat,Marital status,请问您的婚姻状况是？（单选）,"单身/未婚
+已婚无小孩
+已婚有小孩
+离婚有小孩
+离婚无小孩
+其他"
+12,PCC,[Screen],DecMak,Decision maker,家中沐浴露的购买一般由谁决定？（单选）,"我自己决定
+家庭成员决定
+我和家庭成员一起决定"
+13,PCC,[Screen],EduLvl,Education level,请问您受教育的程度是？（单选）,"没有受过正式教育
+小学
+初中
+高中
+中专/技校
+大专或大学非本科
+大学本科或以上"
+14,PCC,[Screen],CleanHab,Habits of most commonly used cleaning products,过去3个月内，您洗澡时最常使用的清洁产品习惯是？（单选）,"只用香皂
+既用香皂又用沐浴露，但主要用香皂
+只用沐浴露
+既用香皂又用沐浴露，但主要用沐浴露
+香皂和沐浴露频率基本相同
+只用清水
+其他"
+15,PCC,[Screen],BWFreq,Frequency of using body wash,过去一个月内，平均您使用沐浴露洗澡的次数是？（单选）,"每周7次及以上
+每周6次
+每周5次
+每周4次
+每周3次
+每周2次
+每周1次
+每周不到1次"
+16,PCC,[Screen],ShwrTool,Shower tool,过去三个月内，洗澡打沐浴露时最常使用哪种工具？（单选）,"毛巾
+搓澡巾
+海绵
+浴花
+用手直接涂抹
+其他"
+17,PCC,[Screen],BWBrdP3M,BW brand used in P3M,过去3个月内，您洗澡时曾使用的沐浴露品牌有哪些？（多选）,
+18,PCC,[Screen],BWVarP6M,BW variant used in P3M,过去6个月内，您曾使用各母品牌下哪些具体产品？（多选）,
+19,PCC,[Screen],BWMostP3M,BW variant used most often in P3M,过去3个月内，您洗澡时最常使用的是哪一款？（单选）,
+20,PCC,[Screen],PurchWho,Purchase For Who,以下哪个描述最符合你过去半年购买沐浴露的情况？（单选）,"为自己（主要考虑我自己的需求买的，只有我自己用 
+mainly based my own needs, myself use only）
+为自己（主要考虑我自己的需求买的，全家所有人跟着我用 
+mainly based my own needs, family follow me）
+为家人（主要考虑家里人的需求买的，我和我的家人共用一瓶 
+mainly based family needs, family use together）
+为家人（主要考虑家人需求不同，我用自己的，给家人买另外的产品 
+mainly based family needs, use different products）
+为家人（主要考虑家里孩子的需求买的，全家一起用 
+mainly based children’s needs, family use together）"
+21,PCC,[Screen],BrdPref,Brand preference,当你选择沐浴露品牌时，哪些句子更符合你的品牌偏好？（复选）,"是适合全家使用的洗护品牌
+适合女士的洗护品牌
+值得信赖大品牌
+包装好看，符合我的审美
+品牌产品物有所值
+专业做身体清洁的品牌
+品牌广告多，经常听到
+店里看到过/医生专家推荐的大品牌"
+22,PCC,[Screen],Top2BWBen,Top 2 body wash benefits,请选择您觉得最重要的两个沐浴露功效（复选两项）,"清爽
+香氛
+保湿滋润
+美白肌肤
+提亮肌肤
+细滑肌肤
+深层清洁
+除菌
+紧致肌肤
+令肌肤弹润
+全家可用
+其他"
+23,PCC,[Screen],TopBWFact,Most important body wash selection factor,请选择您最重要选择沐浴露的因素是（单选）,"安全可靠
+给我很好的沐浴体验
+能够提供我想要的功效
+可以深层清洁的
+以上都没有"
+24,PCC,[Screen],PerfNum,Number of perfume regularly used,请问您个人常用的香水数量是（单选）,"我不用香水
+1瓶
+1-3瓶
+>3瓶"
+25,PCC,[Screen],WorkLifeAtt,Attitude to work and life,请问您对工作和生活的态度（单选）,"工作和生活都给我积极的影响，我会将工作和生活都做得更好
+我对工作和生活都没有特别的感觉，保持现状
+我很热爱生活，工作只是我好好生活的基础
+现在我主要想好好工作，得到更快的升职加薪
+其他"
+26,PCC,[Screen],SkinStat2M,Body skin status in recent 2 months,请选择您最近两个月的身体皮肤状态（单选）,"偏干燥
+不干也不油，刚刚好
+四肢干，前胸后背油
+偏油
+我不确定
+皮肤敏感（红，痒，肿，痛）"
+27,PCC,[Screen],SkinProb2M,Main body skin problem in recent 2 months,请选择您最近两个月的主要身体问题（单选）,"粗糙
+暗沉
+干燥
+长痘
+油腻不清爽
+松弛
+颜色不均
+没什么问题"
+28,PCC,[Screen],IngredAllg,Allergy to food/cosmetic ingredients,请选择您是否有对食品或化妆护肤品中成分过敏（单选）,"没有
+有"
+29,PCC,[Screen],SensSkin,Sensitive skin condition,请选择您是否有敏感皮肤过敏，或经皮肤科医生诊断、治疗的敏感皮肤（单选）,"没有
+有"
+30,PCC,[Screen],PregBF,Pregnancy or breastfeeding status,请选择您是否正处于怀孕或哺乳期（单选）,"没有
+是的"
+31,PCC,[Screen],PCTestP6M,Personal care consumer test participation in P6M,请选择您过去六个月是否参加了个人清洁护理产品的消费者测试（单选）,"有
+没有"
+32,PCC,[Screen],EmpStat,Employment,请问您目前的工作状况是？（单选）,"正在做全职工作
+正在做临时/兼职工作
+没有工作
+我是一个学生"
+33,PCC,[Screen],RespStat,Status of respondents,请问您目前的主要身份属于下面哪一类？（单选）,"机关/事业单位干部/教师
+技术人员
+企业管理人员/厂长经理
+工人/服务员/一般职工
+个体户
+离退休人员
+待业人员
+没有工作
+家庭主妇
+学生
+其他（请注明）"
+34,PCC,[General],QAR,OAR,考虑到我们派发给您的沐浴露产品的各个方面，您对它的总体评价是？（非常好/很好/好/一般/不好）,
+35,PCC,[General],RCR,RCR,考虑到我们派发给您的沐浴露产品的各个方面，和你之前使用过的沐浴露产品相比，您会如何评价它呢？,"a.这是我曾经用过的最好的沐浴露
+b.比我曾经用过的沐浴露要好一些
+c.和我曾经用过的沐浴露一样没什么不同
+d.比我曾经用过的沐浴露差一些
+e.这是我曾经用过的最差的沐浴露"
+36,PCC,[General],Replacement,Replacement,针对你使用过的这款 产品，你会用它取代/替换掉目前洗澡/身体护理日常步骤中沐浴露产品吗还是会在您目前的洗澡/身体护理日常步骤中额外加入该产品？（单选）,"a.我会用这个产品取代/替换掉我目前的沐浴露产品
+b.我会把它新增加到我目前的洗澡日常步骤中
+c.我不会用它取代/替换掉我目前使用的任何洗澡产品，也不会把它新增加到我目前的洗澡日常步骤中"
+37,PCC,[General],Unfav / Fav,Favorable/Unfavorable comments,"接下来, 我们想请教对于我们给您派发的测试沐浴露, 您有什么喜欢或不喜欢的地方。请您详细的告诉我您的意见,即使是很小的事情，对我们来讲，都是非常重要的，希望您能尽量详细的解释为什么这个产品是好或是不好，以及您是如何注意到这些地方的。即使是很小的方面，也请您告诉我们,您的意见越详细，对我们的帮助就越大。","·  请问对于我们给您派发的测试沐浴露有哪些方面是您不喜欢的呢？
+·   另一方面，请问对于我们给您派发的测试沐浴露有哪些方面是您喜欢的呢？"
+38,PCC,[General],Uniqueness,Uniqueness Rating,我们派发给您的沐浴露产品在新颖程度方面，您认为它是,"a.      非常新颖/与众不同
+b.     很新颖/与众不同
+c.      有一些新颖/与众不同
+d.     有一点新颖/与众不同
+e.     一点也不新颖/与众不同"
+39,PCC,[General],Likeness,Likeness Rating,对于我们派发给您的沐浴露产品，您对它的喜欢程度是：,"a.      非常喜欢
+b.     喜欢
+c.      说不上喜欢不喜欢
+d.     不喜欢
+e.       非常不喜欢"
+40,PCC,[General],ConceptFit,Fitness with concept,对于我们派发给您的沐浴露产品，您觉得它和< 产品宣称 >的符合程度是：,"a.      非常符合
+b.     符合
+c.      说不上符合不符合
+d.     不符合
+e.     非常不符合"
+41,PCC,[General],Deprivati,Deprivation,将来如果市场上没有这款_____了，您会觉得（单选）,"a.      不能再使用这个_____，我觉得非常失望
+b.     不能再使用这个_____，我觉得有点失望
+c.     不能再使用这个_____，我觉得无所谓"
+42,PCC,[General],Worthpm,Worth paying more,,
+43,PCC,[General],RiU,RiU,现在请您针对这款_____给个评价吧！就像您平时在网上分享您的体验/感受和想法那样，让没用过该产品的人也能了解它的各个方面~,
+44,PCC,[Scent],ScentOvl,OFR,对香味的总体评价,"非常好
+很好
+好
+一般
+不好"
+45,PCC,[Scent],ScentProduct,Scent of the product,泵出（或倒出）产品时，产品本身的香味,"非常好
+很好
+好
+一般
+不好"
+46,PCC,[Scent],ScentUse,Scent during shower,沐浴时的香味,"非常好
+很好
+好
+一般
+不好"
+47,PCC,[Scent],ScentLonglast,Long lasting scent on skin,沐浴后在肌肤上留香持久,"非常好
+很好
+好
+一般
+不好"
+48,PCC,[Scent],ScentNatral,Scent smells natural，not like chemical,香味闻起来天然，不像化学品,"非常好
+很好
+好
+一般
+不好"
+49,PCC,[Scent],ScentFresh,Scent smells fresh,香味闻起来清新,"非常好
+很好
+好
+一般
+不好"
+50,PCC,[Scent],ScentPremium,Scent smells premium,香味闻起来高级,"非常好
+很好
+好
+一般
+不好"
+51,PCC,[Scent],ScentIntensity,Overall scent intensity,香味的浓淡程度,"非常好
+很好
+好
+一般
+不好"
+52,PCC,[Lather],LatherOvl,Overall lather performance,对产品泡沫的总体评价,"非常好
+很好
+好
+一般
+不好"
+53,PCC,[Lather],LatherSpeed,Lathering speed,起泡速度快,"非常好
+很好
+好
+一般
+不好"
+54,PCC,[Lather],LatherVolume,Lather volume,产生的泡沫量丰富,"非常好
+很好
+好
+一般
+不好"
+55,PCC,[Lather],LatherCreamy,Lather creaminess,泡沫细腻绵密,"非常好
+很好
+好
+一般
+不好"
+56,PCC,[Lather],LatherStable,Lather being stable before rinse,冲洗前泡沫稳定,"非常好
+很好
+好
+一般
+不好"
+57,PCC,[Rinse],RinseOvl,Overall rinse performance,对产品容易冲洗的总体评价,"非常好
+很好
+好
+一般
+不好"
+58,PCC,[Rinse],RinseRrdtoff,Product is easy to rinse,产品容易冲洗干净,"非常好
+很好
+好
+一般
+不好"
+59,PCC,[Rinse],RinseResidue,no coating/residue feel,无残留感，不假滑,"非常好
+很好
+好
+一般
+不好"
+60,PCC,[Rinse],RinseLatheroff,Lather is easily rinsed off from skin,泡沫容易从肌肤上清洗掉,"非常好
+很好
+好
+一般
+不好"
+61,PCC,[Rinse],RinsePuff,Lather is easily rinsed off from puff,泡沫容易从浴花上清洗掉 （for Puff user only）,"非常好
+很好
+好
+一般
+不好"
+62,PCC,[Cleansing],CleanDirt,Effectively remove soil/ dirt from skin,有效清洁皮肤上的脏污/杂质,"非常好
+很好
+好
+一般
+不好"
+63,PCC,[Cleansing],CleanDeep,Deep clean,深层清洁肌肤,"非常好
+很好
+好
+一般
+不好"
+64,PCC,[Cleansing],CleanPore,Effective pore cleansing,有效清洁毛孔,"非常好
+很好
+好
+一般
+不好"
+65,PCC,[Cleansing],CleanExfoliate,Dead skin exfoliation and removal,有助于去除老废角质,"非常好
+很好
+好
+一般
+不好"
+66,PCC,[Skin Feel],SkinfeelOvl,Overall,沐浴后肌肤的总体感觉,"非常好
+很好
+好
+一般
+不好"
+67,PCC,[Skin Feel],SkinfeelClean,Leaving skin feel clean,沐浴后肌肤感觉干净,"非常好
+很好
+好
+一般
+不好"
+68,PCC,[Skin Feel],SkinfeelRefresh,Leaving skin feel refreshing,沐浴后肌肤感觉清爽,"非常好
+很好
+好
+一般
+不好"
+69,PCC,[Skin Feel],SkinfeelComfort,Skin feels being comfortable,沐浴后肌肤感觉舒适,"非常好
+很好
+好
+一般
+不好"
+70,PCC,[Skin Feel],SkinfeelElastic,Skin feels elastic,沐浴后肌肤感觉有弹性,"非常好
+很好
+好
+一般
+不好"
+71,PCC,[Skin Feel],SkinfeelRdc,Skin looks radiant,沐浴后肌肤看上去有光泽,"非常好
+很好
+好
+一般
+不好"
+72,PCC,[Skin Feel],SkinfeelSmooth,Skin feels silky/smooth,肌肤感觉光滑,"非常好
+很好
+好
+一般
+不好"
+73,PCC,[Skin Feel],SkinfeelMoist,Skin feel moisturized,肌肤感觉水润，不干燥,"非常好
+很好
+好
+一般
+不好"
+74,PCC,[Skin Feel],SkinfeelMild,Mild on my skin,对皮肤温和,"非常好
+很好
+好
+一般
+不好"
+75,PCC,[Skin Feel],SkinfeelItchy,Skin does not feel itchy,皮肤感觉不痒,"非常好
+很好
+好
+一般
+不好"
+76,PCC,[Skin Feel],SkinfeelTight,Skin does not feel tight,皮肤感觉不紧绷,"非常好
+很好
+好
+一般
+不好"
+77,PCC,[Skin Feel],SkinfeelIrritate,Skin is not red and irritating,皮肤不红不刺激,"非常好
+很好
+好
+一般
+不好"
+78,PCC,[Product Feature],PrdtAppearance,Product aesthetic on hand/puff,沐浴露挤在手上/浴花上的整体外观,"非常好
+很好
+好
+一般
+不好"
+79,PCC,[Product Feature],PrdtNatural,Product aesthetic is Natural,沐浴露看起来是天然的，不像化学品,"非常好
+很好
+好
+一般
+不好"
+80,PCC,[Product Feature],PrdtPremium,Product aesthetic is Premium,沐浴露看起来高端,"非常好
+很好
+好
+一般
+不好"
+81,PCC,[Product Feature],PrdtDeepclean,Product aesthetic is Deep cleansing,沐浴露看起来感觉可以深层清洁,"非常好
+很好
+好
+一般
+不好"
+82,PCC,[Product Feature],PrdtSmooth,Product aesthetic offers skin benefit,沐浴露看起来感觉可以令我的肌肤焕亮丝滑,"非常好
+很好
+好
+一般
+不好"
+83,PCC,[Product Feature],PrdtColor,Product color,沐浴露的颜色（产品本身，请忽略包装）,"非常好
+很好
+好
+一般
+不好"
+84,PCC,[Product Feature],TextureViscosity,Product thickness,沐浴露的稀稠度,"非常好
+很好
+好
+一般
+不好"
+85,PCC,[Product Feature],TestureSpread,Product can be easily spread,产品容易涂抹开,"非常好
+很好
+好
+一般
+不好"
+86,PCC,[Package],PackAppearance,#NAME?,包装整体外观,"非常好
+很好
+好
+一般
+不好"
+87,PCC,[Package],PackPremium,Package is Premium,包装看起来高端,"非常好
+很好
+好
+一般
+不好"
+88,PCC,[Package],PackShape,Package looks pretty,包装的形状,"非常好
+很好
+好
+一般
+不好"
+89,PCC,[Package],PackColor,Package looks premium,包装的颜色,"非常好
+很好
+好
+一般
+不好"
+90,PCC,[Package],PackSize,Package size,包装大小合适,"非常好
+很好
+好
+一般
+不好"
+91,PCC,[Package],PackConvenient,Package easy to use,包装使用方便,"非常好
+很好
+好
+一般
+不好"
+92,PCC,[Package],PackEasypump,Able to press out product with minimum effort,能够省力地按压出产品,"非常好
+很好
+好
+一般
+不好"
+93,PCC,[Package],PackDosage,It can well control the dosage,泵头能很好地控制用量,"非常好
+很好
+好
+一般
+不好"
+94,PCC,[Package],PackRebounce,The pump can be used smoothly,泵头能够流畅的回弹不卡顿,"非常好
+很好
+好
+一般
+不好"
+95,PCC,[Package],PackNoresidue,There is no product left on the bottle mouth after pumping,泵完后没有产品残留在瓶口上，不会给人不干净的感觉,"非常好
+很好
+好
+一般
+不好"
+96,PCC,[Shower Experience],ShowerexpNostress,Relieving my whole day tension & stress,缓解我一整天的紧张和压力,"非常好
+很好
+好
+一般
+不好"
+97,PCC,[Shower Experience],ShowerexpHappy,Making my shower experience more enjoyable,让我的沐浴体验更愉快,"非常好
+很好
+好
+一般
+不好"

@@ -28,7 +28,7 @@ export DATABASE_TABLE='consumer_questionnaire.questionnaire_data'
 python calculation/2_2_main.py path/to/raw-input.csv
 ```
 
-浏览器打开 <http://127.0.0.1:8000/login> 完成访问确认；根路径 `/` 会跳转到 `/login`。确认后进入 `/questionnaire` 菜单，可分别打开 Questionnaire Data Upload 和 Questionnaire Data Analysis。旧的 `/workspace` 路径重定向到分析页；各功能页没有有效 session 时会跳回登录页。
+浏览器打开 <http://127.0.0.1:8000/login> 完成访问确认；根路径 `/` 会跳转到 `/login`。确认后进入 `/questionnaire` 菜单，可分别打开 Questionnaire Data Upload、Questionnaire Data View 和 Questionnaire Data Analysis。旧的 `/workspace` 路径重定向到分析页；各功能页没有有效 session 时会跳回登录页。
 
 进入前填写 work email 和 business unit (BU)，点击 **Confirm and continue**。这是使用记录，不是邮箱认证；每次确认增加一次使用次数，刷新已有会话不会重复计数。计数初始值为 66，SQLite 记录默认保存在 `output/usage.sqlite3`，也可用 `USAGE_DB_PATH` 更改路径。
 
@@ -40,18 +40,21 @@ python -m pytest -q calculation/tests backend/tests
 
 ## 页面定位
 
-前端包含登录页、Questionnaire 菜单 hub、独立上传页和独立分析页。`/` 会重定向到 `/login`；旧 `/workspace` 路径保留为分析页兼容跳转。
+前端包含登录页、Questionnaire 菜单 hub、独立上传页、数据查看页和分析页。`/` 会重定向到 `/login`；旧 `/workspace` 路径保留为分析页兼容跳转。
 
 | 页面名称 / URL | 页面元素定位 | 修改位置 |
 | --- | --- | --- |
 | Login / Access：`/login` | `#access-gate`、`#access-form`、`#access-email`、`#access-bu`、`#gate-use-count` | 独立页面结构和文案在 [frontend/login.html](frontend/login.html)；确认、使用次数刷新、跳转在 [frontend/src/login.js](frontend/src/login.js)；外观在 [frontend/src/app.css](frontend/src/app.css) 的 `.access-*` / `.gate-usage` |
-| Questionnaire Menu：`/questionnaire` | `.questionnaire-menu`、`a[href="/questionnaire-data-upload"]`、`a[href="/questionnaire-data-analysis"]` | 页面结构在 [frontend/questionnaire.html](frontend/questionnaire.html)；session 校验在 [frontend/src/hub.js](frontend/src/hub.js)；样式 `.questionnaire-menu` 在 [frontend/src/app.css](frontend/src/app.css) |
+| Questionnaire Menu：`/questionnaire` | `.questionnaire-menu`、上传/查看/分析三个链接 | 页面结构在 [frontend/questionnaire.html](frontend/questionnaire.html)；session 校验在 [frontend/src/hub.js](frontend/src/hub.js)；样式 `.questionnaire-menu` 在 [frontend/src/app.css](frontend/src/app.css) |
 | Questionnaire Data Upload：`/questionnaire-data-upload` | `#upload-form`、`#csv-file`、`#upload-study-name`、`#upload-button`、`.standard-files` | 独立页面在 [frontend/upload.html](frontend/upload.html)；Long/Wide 上传在 [frontend/src/upload.js](frontend/src/upload.js)；模板下载仍由 [backend/src/main.py](backend/src/main.py) 的 `download_template()` 提供 |
+| Questionnaire Data View：`/questionnaire-data-view` | `#view-study`、`#data-view-table`、`#data-view-status` | 页面在 [frontend/data-view.html](frontend/data-view.html)；下拉及宽表渲染在 [frontend/src/data-view.js](frontend/src/data-view.js)；宽表转换在 [backend/src/data_view.py](backend/src/data_view.py) |
 | Questionnaire Data Analysis：`/questionnaire-data-analysis` | `#analysis-form`、`#existing-study`、`#refresh-studies`、`#run-button`、`#results` | 页面在 [frontend/index.html](frontend/index.html)；Study 查询、分析请求和报告渲染在 [frontend/src/app.js](frontend/src/app.js)；旧 `/workspace` 重定向到此页 |
 | Analysis Header：标题和使用次数 | `#usage-count`、`#use-count` | 分析页 HTML 在 [frontend/index.html](frontend/index.html)；计数更新在 [frontend/src/app.js](frontend/src/app.js)；菜单和上传页共用 `.topbar` / `.usage-count` 样式 |
 | PR Results：报告预览（分析页） | `#results`、`#report-table`、`#database-status`、`#report-caption` | 渲染在 [frontend/src/app.js](frontend/src/app.js) 的 `renderReport()`；表格样式 `.table-scroll`、`table`、`thead`、`tbody` 在 [frontend/src/app.css](frontend/src/app.css) |
 
-修改菜单 hub 定位 `frontend/questionnaire.html` / `frontend/src/hub.js`；修改上传页定位 `frontend/upload.html` / `frontend/src/upload.js`；修改分析页定位 `frontend/index.html` / `frontend/src/app.js`。所有页面共用 `frontend/src/app.css`，文案目前是英文。
+修改菜单 hub 定位 `frontend/questionnaire.html` / `frontend/src/hub.js`；修改上传页定位 `frontend/upload.html` / `frontend/src/upload.js`；修改查看页定位 `frontend/data-view.html` / `frontend/src/data-view.js`；修改分析页定位 `frontend/index.html` / `frontend/src/app.js`。所有页面共用 `frontend/src/app.css`，文案目前是英文。
+
+Data View 以 `1_Study`、`2_Respondent Serial Number`、`3_Day`、`4_Leg` 为前四列，将 `5_Dqs` 展为列、`6_Value` 显示为值；同一单元格存在多条记录时显示全部值，并以逗号分隔。该页面只读取数据，不修改数据库。
 
 ## 分析与数据流程
 
@@ -90,12 +93,14 @@ python -m pytest -q calculation/tests backend/tests
 | `GET /workspace` | 兼容跳转到 `/questionnaire-data-analysis` |
 | `GET /questionnaire` | 返回 Questionnaire 菜单 hub |
 | `GET /questionnaire-data-upload` | 返回独立的 Questionnaire Data Upload 页面 |
+| `GET /questionnaire-data-view` | 返回独立的 Questionnaire Data View 页面 |
 | `GET /questionnaire-data-analysis` | 返回独立的 Questionnaire Data Analysis 页面 |
 | `GET /api/health` | 服务健康检查 |
 | `GET /api/usage/count` | 仅返回总使用次数，不返回用户信息 |
 | `POST /api/access/confirm` | 校验并记录 email、BU，建立访问 session |
 | `GET /api/access/session` | 恢复当前浏览器 session 并返回个人/总次数 |
 | `GET /api/studies` | 从 PostgreSQL 查询不同的 `1_Study`；DB 不可用时返回错误 |
+| `GET /api/questionnaire-data?study_name=...` | 读取选定 Study 的业务数据并返回用于展示的宽表；需要 Bearer token |
 | `POST /api/uploads` | 检测 Long/Wide CSV、校验或转换并立即写入 PostgreSQL；Wide 需提供 Study Name |
 | `GET /api/templates/{kind}` | 下载 `raw-input`、`pr-report` 或 `database` 标准文件 |
 | `POST /api/analyze` | 按已入库 Study Name 从 PostgreSQL 读取数据并生成报告/导出文件；需要 Bearer token |
@@ -110,8 +115,10 @@ python -m pytest -q calculation/tests backend/tests
 | [frontend/src/login.js](frontend/src/login.js) | `/login` 表单、计数展示、访问确认和跳转 |
 | [frontend/questionnaire.html](frontend/questionnaire.html) | `/questionnaire` 菜单 hub |
 | [frontend/upload.html](frontend/upload.html) | `/questionnaire-data-upload` 上传和模板下载页 |
+| [frontend/data-view.html](frontend/data-view.html) | `/questionnaire-data-view` 数据查看页 |
 | [frontend/src/hub.js](frontend/src/hub.js) | hub session 校验 |
 | [frontend/src/upload.js](frontend/src/upload.js) | 上传页 session、格式上传与结果提示 |
+| [frontend/src/data-view.js](frontend/src/data-view.js) | 查看页 Study 选择与宽表渲染 |
 | [frontend/index.html](frontend/index.html) | `/questionnaire-data-analysis` 分析和结果页 |
 | [frontend/src/app.css](frontend/src/app.css) | 登录页、菜单、上传、分析页共用样式 |
 | [frontend/src/app.js](frontend/src/app.js) | 分析页 session 检查、Study 查询、分析请求和报告表格渲染 |
@@ -119,6 +126,7 @@ python -m pytest -q calculation/tests backend/tests
 | [backend/src/usage_store.py](backend/src/usage_store.py) | SQLite 基准计数、访问事件和 token hash |
 | [backend/src/database.py](backend/src/database.py) | PostgreSQL 列检查与安全插入 |
 | [backend/src/ingestion.py](backend/src/ingestion.py) | 上传文件的 Long/Wide 格式识别和校验 |
+| [backend/src/data_view.py](backend/src/data_view.py) | 数据查看页 Long 转 Wide，保留重复答案 |
 | [calculation/database_format.py](calculation/database_format.py) | 共用数据库六列定义及上传 Wide 转 Long |
 | [calculation/study_data.py](calculation/study_data.py) | 已存数据库 Long 行转分析 Wide 表 |
 | [calculation/input_schema.py](calculation/input_schema.py) | 原始 CSV 固定 schema 的唯一校验入口 |

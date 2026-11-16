@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Data View</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE</p>
+          <h1>Questionnaire Data View</h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <a class="page-back" href="/questionnaire">&#8592; Questionnaire</a>
+
+      <section class="data-view-controls" aria-labelledby="data-view-heading">
+        <div class="data-view-heading">
+          <div>
+            <p class="eyebrow">STUDY DATA</p>
+            <h2 id="data-view-heading">Study responses</h2>
+          </div>
+          <p id="data-view-count" class="data-view-count" aria-live="polite"></p>
+        </div>
+        <div class="study-fields">
+          <label class="field" for="view-study">
+            <span>Study Name from PostgreSQL</span>
+            <select id="view-study" disabled>
+              <option value="">Loading Study Names...</option>
+            </select>
+          </label>
+          <button id="refresh-view-studies" class="refresh-button" type="button">Refresh studies</button>
+        </div>
+        <p id="data-view-status" class="status" role="status" aria-live="polite">Loading Study Names...</p>
+      </section>
+
+      <section id="data-view-results" class="data-view-results" aria-label="Questionnaire responses" hidden>
+        <div class="table-scroll">
+          <table id="data-view-table" class="data-view-table" aria-label="Questionnaire responses in wide format">
+            <colgroup></colgroup>
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="footer"><span>Questionnaire</span><span>Data View</span></footer>
+    </main>
+    <script src="/assets/page-session.js" defer></script>
+    <script src="/assets/data-view.js" defer></script>
+  </body>
+</html>

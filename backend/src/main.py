@@ -87,6 +87,11 @@ def questionnaire_upload_page() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "upload.html")
 
 
+@app.get("/questionnaire-data-view")
+def questionnaire_data_view_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "data-view.html")
+
+
 @app.get("/questionnaire-data-analysis")
 def questionnaire_analysis_page() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
@@ -140,6 +145,36 @@ def list_studies(authorization: str | None = Header(default=None)) -> dict[str, 
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception:
         raise HTTPException(status_code=503, detail="Could not load Study Names from PostgreSQL.")
+
+
+@app.get("/api/questionnaire-data")
+def view_questionnaire_data(
+    study_name: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _require_access(authorization)
+    from backend.src.data_view import build_wide_view
+
+    normalized_study = study_name.strip()
+    if not normalized_study:
+        raise HTTPException(status_code=422, detail="Choose a Study Name from PostgreSQL.")
+    try:
+        data = fetch_study_rows(
+            os.getenv("DATABASE_URL"),
+            os.getenv("DATABASE_TABLE", "consumer_questionnaire.questionnaire_data"),
+            normalized_study,
+        )
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="Could not read the selected Study Name from PostgreSQL.") from error
+    if data.empty:
+        raise HTTPException(status_code=404, detail="No questionnaire data found for this Study Name.")
+    return build_wide_view(data)
 
 
 @app.post("/api/uploads")
