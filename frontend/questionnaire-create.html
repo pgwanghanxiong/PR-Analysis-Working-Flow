@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Create</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE</p>
+          <h1>Questionnaire Create</h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <a class="page-back" href="/questionnaire">&#8592; Questionnaire</a>
+
+      <section class="questionnaire-build-section" aria-labelledby="questionnaire-build-title">
+        <div class="data-view-heading">
+          <div>
+            <p class="eyebrow">QUESTION DEFINITION</p>
+            <h2 id="questionnaire-build-title">Questionnaire Template</h2>
+          </div>
+          <p id="questionnaire-build-count" class="data-view-count" aria-live="polite"></p>
+        </div>
+        <p id="questionnaire-build-status" class="status" role="status" aria-live="polite">Loading questionnaire definitions...</p>
+        <div id="questionnaire-build-scroll" class="table-scroll questionnaire-build-scroll" hidden>
+          <table id="questionnaire-build-table" class="questionnaire-build-table" aria-label="Read-only questionnaire definitions">
+            <colgroup></colgroup>
+            <thead></thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr>
+                <td id="visit-actions-cell" colspan="7">
+                  <div class="visit-actions">
+                    <span id="visit-summary" class="visit-summary">Visit columns are temporary and reset when this page reloads.</span>
+                    <button id="add-visit" class="refresh-button" type="button">Add Visit</button>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="questionnaire-create-actions" aria-label="Create questionnaire preview">
+        <p id="questionnaire-create-status" class="status" role="status" aria-live="polite"></p>
+        <button id="questionnaire-create-button" class="run-button" type="button" disabled>
+          <span>Create</span><span aria-hidden="true">&#8594;</span>
+        </button>
+        <button id="download-questionnaire-excel" class="download-link" type="button" disabled hidden>
+          Download Excel <span aria-hidden="true">&#8595;</span>
+        </button>
+      </section>
+
+      <dialog id="visit-dialog" class="visit-dialog" aria-labelledby="visit-dialog-title">
+        <form id="visit-form">
+          <p class="eyebrow">NEW COLUMN</p>
+          <h2 id="visit-dialog-title">Add Visit</h2>
+          <label class="field" for="visit-name">
+            <span>Visit / Widget name</span>
+            <input id="visit-name" name="visit_name" type="text" maxlength="80" required placeholder="e.g. screening, day one" />
+          </label>
+          <p id="visit-dialog-status" class="status error" role="alert" hidden></p>
+          <div class="visit-dialog-actions">
+            <button id="cancel-visit" class="refresh-button" type="button">Cancel</button>
+            <button class="run-button" type="submit"><span>Add Visit</span><span aria-hidden="true">&#8594;</span></button>
+          </div>
+        </form>
+      </dialog>
+
+      <footer class="footer"><span>Questionnaire</span><span>Create</span></footer>
+    </main>
+    <script src="/assets/page-session.js" defer></script>
+    <script src="/assets/questionnaire-create.js" defer></script>
+  </body>
+</html>

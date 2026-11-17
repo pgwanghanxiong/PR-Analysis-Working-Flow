@@ -17,6 +17,26 @@ LONG_COLUMNS = [
     "5_Dqs",
     "6_Value",
 ]
+QUESTIONNAIRE_BUILD_TABLE = "consumer_questionnaire.questionnaire_build"
+QUESTIONNAIRE_BUILD_SCHEMA = "consumer_questionnaire"
+QUESTIONNAIRE_BUILD_COLUMNS = [
+    "ID",
+    "BU",
+    "Category",
+    "Variable Code",
+    "English Question",
+    "Chinese Question",
+    "Options",
+]
+QUESTIONNAIRE_BUILD_COLUMN_TYPES = [
+    ("ID", "integer", "NO"),
+    ("BU", "text", "NO"),
+    ("Category", "text", "NO"),
+    ("Variable Code", "text", "NO"),
+    ("English Question", "text", "NO"),
+    ("Chinese Question", "text", "YES"),
+    ("Options", "text", "YES"),
+]
 
 
 class DatabaseUnavailable(RuntimeError):
@@ -25,6 +45,96 @@ class DatabaseUnavailable(RuntimeError):
 
 class DatabaseSchemaMismatch(RuntimeError):
     pass
+
+
+def insert_questionnaire_build_rows(
+    rows: list[tuple[object, ...]],
+    database_url: str | None,
+) -> int:
+    if not database_url:
+        raise DatabaseUnavailable("DATABASE_URL is not configured; questionnaire template was not saved.")
+    if not rows:
+        raise ValueError("The uploaded questionnaire template contains no rows.")
+
+    import psycopg
+    from psycopg import sql
+
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT column_name, data_type, is_nullable
+                   FROM information_schema.columns
+                   WHERE table_schema = %s AND table_name = %s
+                   ORDER BY ordinal_position""",
+                (QUESTIONNAIRE_BUILD_SCHEMA, "questionnaire_build"),
+            )
+            actual_columns = cursor.fetchall()
+            if actual_columns != QUESTIONNAIRE_BUILD_COLUMN_TYPES:
+                raise DatabaseSchemaMismatch(
+                    "consumer_questionnaire.questionnaire_build columns, types, nullability, or order "
+                    f"do not match the approved 4_1 template schema. Expected {QUESTIONNAIRE_BUILD_COLUMN_TYPES}; "
+                    f"found {actual_columns}."
+                )
+
+            cursor.execute(
+                """SELECT tc.constraint_type, kcu.column_name
+                   FROM information_schema.table_constraints AS tc
+                   JOIN information_schema.key_column_usage AS kcu
+                     ON tc.constraint_catalog = kcu.constraint_catalog
+                    AND tc.constraint_schema = kcu.constraint_schema
+                    AND tc.constraint_name = kcu.constraint_name
+                   WHERE tc.table_schema = %s AND tc.table_name = %s
+                     AND tc.constraint_type IN ('PRIMARY KEY', 'UNIQUE')""",
+                (QUESTIONNAIRE_BUILD_SCHEMA, "questionnaire_build"),
+            )
+            constraints = {(row[0], row[1]) for row in cursor.fetchall()}
+            if ("PRIMARY KEY", "ID") not in constraints or ("UNIQUE", "Variable Code") not in constraints:
+                raise DatabaseSchemaMismatch(
+                    "questionnaire_build must have a primary key on ID and a unique constraint on Variable Code."
+                )
+
+            columns = sql.SQL(", ").join(sql.Identifier(column) for column in QUESTIONNAIRE_BUILD_COLUMNS)
+            placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in QUESTIONNAIRE_BUILD_COLUMNS)
+            statement = sql.SQL("INSERT INTO {}.{} ({}) VALUES ({})").format(
+                sql.Identifier(QUESTIONNAIRE_BUILD_SCHEMA),
+                sql.Identifier("questionnaire_build"),
+                columns,
+                placeholders,
+            )
+            cursor.executemany(statement, rows)
+    return len(rows)
+
+
+def fetch_questionnaire_build_rows(database_url: str | None) -> list[tuple[Any, ...]]:
+    if not database_url:
+        raise DatabaseUnavailable("DATABASE_URL is not configured.")
+
+    import psycopg
+
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT column_name, data_type, is_nullable
+                   FROM information_schema.columns
+                   WHERE table_schema = %s AND table_name = %s
+                   ORDER BY ordinal_position""",
+                (QUESTIONNAIRE_BUILD_SCHEMA, "questionnaire_build"),
+            )
+            actual_columns = cursor.fetchall()
+            if actual_columns != QUESTIONNAIRE_BUILD_COLUMN_TYPES:
+                raise DatabaseSchemaMismatch(
+                    "consumer_questionnaire.questionnaire_build columns, types, nullability, or order "
+                    f"do not match the approved 4_1 template schema. Expected {QUESTIONNAIRE_BUILD_COLUMN_TYPES}; "
+                    f"found {actual_columns}."
+                )
+            cursor.execute(
+                """SELECT "ID", "BU", "Category", "Variable Code",
+                          "English Question", "Chinese Question", "Options"
+                   FROM consumer_questionnaire.questionnaire_build
+                     ORDER BY "ID"
+                  """
+            )
+            return cursor.fetchall()
 
 
 def _validated_table_name(table_name: str) -> tuple[str, str]:

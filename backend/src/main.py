@@ -6,7 +6,7 @@ import re
 import sys
 import uuid
 import csv
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +28,8 @@ from calculation.database_format import load_database_columns
 from backend.src.database import (
     DatabaseSchemaMismatch,
     DatabaseUnavailable,
+    QUESTIONNAIRE_BUILD_COLUMNS,
+    fetch_questionnaire_build_rows,
     fetch_study_names,
     fetch_study_rows,
     insert_uploaded_rows,
@@ -50,6 +52,21 @@ app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "src"), name="assets")
 class AccessRequest(BaseModel):
     email: str
     business_unit: str
+
+
+class QuestionnaireExportQuestion(BaseModel):
+    question_code: str
+    question: str
+    answer: str = ""
+
+
+class QuestionnaireExportVisit(BaseModel):
+    name: str
+    questions: list[QuestionnaireExportQuestion]
+
+
+class QuestionnaireExportRequest(BaseModel):
+    visits: list[QuestionnaireExportVisit]
 
 
 def _require_access(authorization: str | None) -> dict[str, str]:
@@ -85,6 +102,16 @@ def questionnaire_menu_page() -> FileResponse:
 @app.get("/questionnaire-data-upload")
 def questionnaire_upload_page() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "upload.html")
+
+
+@app.get("/questionnaire-standard-upload")
+def questionnaire_standard_upload_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "questionnaire-standard-upload.html")
+
+
+@app.get("/questionnaire-create")
+def questionnaire_create_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "questionnaire-create.html")
 
 
 @app.get("/questionnaire-data-view")
@@ -147,6 +174,71 @@ def list_studies(authorization: str | None = Header(default=None)) -> dict[str, 
         raise HTTPException(status_code=503, detail="Could not load Study Names from PostgreSQL.")
 
 
+@app.get("/api/questionnaire-build")
+def list_questionnaire_build(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    _require_access(authorization)
+    try:
+        rows = fetch_questionnaire_build_rows(os.getenv("DATABASE_URL"))
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="Could not load questionnaire definitions from PostgreSQL.") from error
+    return {
+        "columns": QUESTIONNAIRE_BUILD_COLUMNS,
+        "rows": [list(row) for row in rows],
+        "count": len(rows),
+    }
+
+
+@app.post("/api/questionnaire-build/export")
+def export_questionnaire_build(
+    request: QuestionnaireExportRequest,
+    authorization: str | None = Header(default=None),
+) -> Response:
+    _require_access(authorization)
+    rows = [
+        (visit.name.strip(), question.question_code, question.question, question.answer)
+        for visit in request.visits
+        for question in visit.questions
+        if visit.name.strip()
+    ]
+    if not rows:
+        raise HTTPException(status_code=422, detail="Select at least one question in a Visit before exporting.")
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Questionnaire"
+    headers = ["Day", "Question Code", "Question", "Answer"]
+    worksheet.append(headers)
+    for cell in worksheet[1]:
+        cell.font = Font(bold=True, color="183B36")
+        cell.fill = PatternFill("solid", fgColor="DDEFEA")
+        cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+    for row in rows:
+        row_index = worksheet.max_row + 1
+        for column_index, value in enumerate(row, start=1):
+            cell = worksheet.cell(row_index, column_index, str(value))
+            cell.data_type = "s"
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+    worksheet.freeze_panes = "A2"
+    for column, width in {"A": 18, "B": 22, "C": 64, "D": 64}.items():
+        worksheet.column_dimensions[column].width = width
+    output = BytesIO()
+    workbook.save(output)
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="questionnaire.xlsx"'},
+    )
+
+
 @app.get("/api/questionnaire-data")
 def view_questionnaire_data(
     study_name: str,
@@ -175,6 +267,45 @@ def view_questionnaire_data(
     if data.empty:
         raise HTTPException(status_code=404, detail="No questionnaire data found for this Study Name.")
     return build_wide_view(data)
+
+
+@app.post("/api/questionnaire-build/upload")
+def upload_questionnaire_build(
+    file: UploadFile = File(...),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    from backend.src.questionnaire_build import parse_questionnaire_build_csv
+    from backend.src.database import insert_questionnaire_build_rows
+
+    _require_access(authorization)
+    if not file.filename or Path(file.filename).suffix.lower() != ".csv":
+        raise HTTPException(status_code=415, detail="Upload a CSV file matching 4_1_Questionnaire Template.csv.")
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="CSV upload exceeds the 20 MB limit.")
+
+    try:
+        rows = parse_questionnaire_build_csv(content)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    try:
+        inserted_rows = insert_questionnaire_build_rows(rows, os.getenv("DATABASE_URL"))
+    except DatabaseUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except DatabaseSchemaMismatch as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="PostgreSQL questionnaire upload failed; no data was saved.") from error
+
+    return {
+        "status": "saved",
+        "table": "consumer_questionnaire.questionnaire_build",
+        "inserted_rows": inserted_rows,
+        "message": f"Saved {inserted_rows} questionnaire definition rows to PostgreSQL.",
+    }
 
 
 @app.post("/api/uploads")

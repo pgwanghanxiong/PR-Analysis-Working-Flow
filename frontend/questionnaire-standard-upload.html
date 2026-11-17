@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f2f6f3" />
+    <title>Questionnaire Standard Upload</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main id="app-shell" class="shell" inert>
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <p class="eyebrow">QUESTIONNAIRE</p>
+          <h1>Questionnaire Standard Upload</h1>
+        </div>
+        <div id="usage-count" class="usage-count" aria-live="polite" aria-label="Total usage count">
+          <span>Total uses</span><strong id="use-count">66</strong>
+        </div>
+      </header>
+
+      <a class="page-back" href="/questionnaire">&#8592; Questionnaire</a>
+
+      <section class="workflow-section standard-upload-section" aria-labelledby="standard-upload-title">
+        <div class="workflow-heading">
+          <span class="step-number" aria-hidden="true">01</span>
+          <div>
+            <p class="eyebrow">QUESTIONNAIRE DEFINITION</p>
+            <h2 id="standard-upload-title">Upload questionnaire template</h2>
+          </div>
+        </div>
+        <form id="questionnaire-standard-upload-form" class="standard-upload-form">
+          <label class="file-picker" for="questionnaire-standard-file">
+            <span class="file-icon" aria-hidden="true">+</span>
+            <span class="file-label">
+              <strong id="questionnaire-standard-file-name">Choose CSV file</strong>
+              <small>4_1 Questionnaire Template format</small>
+            </span>
+            <input id="questionnaire-standard-file" name="file" type="file" accept=".csv,text/csv" required />
+          </label>
+          <div class="standard-upload-actions">
+            <p id="questionnaire-standard-upload-status" class="status" role="status" aria-live="polite">Select a CSV file matching the questionnaire template.</p>
+            <button id="questionnaire-standard-upload-button" class="run-button" type="submit" disabled>
+              <span>Upload standard file</span><span aria-hidden="true">&#8593;</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <footer class="footer"><span>Questionnaire</span><span>Standard Upload</span></footer>
+    </main>
+    <script src="/assets/page-session.js" defer></script>
+    <script src="/assets/questionnaire-standard-upload.js" defer></script>
+  </body>
+</html>
